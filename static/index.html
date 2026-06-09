@@ -37,6 +37,10 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+    @keyframes pinPulse {
+      0%, 100% { opacity: 0.35; transform: scale(2); }
+      50% { opacity: 0.08; transform: scale(2.7); }
+    }
   </style>
   <script>
     tailwind.config = {
@@ -831,32 +835,320 @@
       const [activeId, setActiveId] = useState(findings[0]?.id || "");
       const [hoveredId, setHoveredId] = useState(null);
 
+      // Zoom and Pan States
+      const [zoom, setZoom] = useState(100);
+      const [panX, setPanX] = useState(0);
+      const [panY, setPanY] = useState(0);
+      const [isPanning, setIsPanning] = useState(false);
+      const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+      const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+      const [spacePressed, setSpacePressed] = useState(false);
+
+      const viewportRef = useRef(null);
+
+      const ZOOM_PRESETS = [25, 50, 75, 100, 125, 150, 175, 200, 300, 400];
+
       const currentPageManifest = manifest.pages.find(p => p.page === pageNo) || manifest.pages[0];
       const pageMarkers = currentPageManifest.markers || [];
       const pageImage = `${filesBase}/${currentPageManifest.image}`;
       
       const sel = findings.find(f => f.id === activeId) || findings[0];
 
-      // Handle synchronizing click on marker
+      const getPresetIndex = (z) => {
+        let closest = 0;
+        let diff = Math.abs(ZOOM_PRESETS[0] - z);
+        for (let i = 1; i < ZOOM_PRESETS.length; i++) {
+          let d = Math.abs(ZOOM_PRESETS[i] - z);
+          if (d < diff) {
+            diff = d;
+            closest = i;
+          }
+        }
+        return closest;
+      };
+
+      // Spacebar panning keys listener
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.code === "Space") {
+            if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA") return;
+            setSpacePressed(true);
+            e.preventDefault();
+          }
+        };
+        const handleKeyUp = (e) => {
+          if (e.code === "Space") {
+            setSpacePressed(false);
+          }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        return () => {
+          window.removeEventListener("keydown", handleKeyDown);
+          window.removeEventListener("keyup", handleKeyUp);
+        };
+      }, []);
+
+      // Prevent window scroll on wheel zoom
+      useEffect(() => {
+        const viewport = viewportRef.current;
+        if (!viewport) return;
+        
+        const handleWheel = (e) => {
+          e.preventDefault();
+          const idx = getPresetIndex(zoom);
+          if (e.deltaY < 0) {
+            if (idx < ZOOM_PRESETS.length - 1) {
+              setZoom(ZOOM_PRESETS[idx + 1]);
+            }
+          } else {
+            if (idx > 0) {
+              setZoom(ZOOM_PRESETS[idx - 1]);
+            }
+          }
+        };
+        
+        viewport.addEventListener("wheel", handleWheel, { passive: false });
+        return () => {
+          viewport.removeEventListener("wheel", handleWheel);
+        };
+      }, [zoom]);
+
+      // Calculate centering offset
+      const centerOnMarker = (f, targetZoom = zoom) => {
+        if (!f || !viewportRef.current) return;
+        
+        // Wait a small frame for dimensions to update
+        setTimeout(() => {
+          if (!viewportRef.current) return;
+          const rect = viewportRef.current.getBoundingClientRect();
+          const containerWidth = rect.width;
+          const containerHeight = rect.height;
+          
+          const pageW = currentPageManifest.width || 792;
+          const pageH = currentPageManifest.height || 612;
+          
+          const scaleX = containerWidth / pageW;
+          const scaleY = containerHeight / pageH;
+          const fitScale = Math.min(scaleX, scaleY);
+          
+          const baseWidth = pageW * fitScale;
+          const baseHeight = pageH * fitScale;
+          
+          const [x0, y0, x1, y1] = f.bbox || [0.5, 0.5, 0.5, 0.5];
+          const cx = (x0 + x1) / 2;
+          const cy = (y0 + y1) / 2;
+          
+          const scale = targetZoom / 100;
+          const imgW = baseWidth * scale;
+          const imgH = baseHeight * scale;
+          
+          // Center point in local viewport coordinate system:
+          const targetPanX = containerWidth / 2 - cx * imgW;
+          const targetPanY = containerHeight / 2 - cy * imgH;
+          
+          setPanX(targetPanX);
+          setPanY(targetPanY);
+        }, 50);
+      };
+
+      // Zoom helpers
+      const changeZoom = (newZoom) => {
+        setZoom(newZoom);
+        if (sel) {
+          centerOnMarker(sel, newZoom);
+        }
+      };
+
+      const handleZoomIn = () => {
+        const idx = getPresetIndex(zoom);
+        if (idx < ZOOM_PRESETS.length - 1) {
+          changeZoom(ZOOM_PRESETS[idx + 1]);
+        }
+      };
+
+      const handleZoomOut = () => {
+        const idx = getPresetIndex(zoom);
+        if (idx > 0) {
+          changeZoom(ZOOM_PRESETS[idx - 1]);
+        }
+      };
+
+      const handleFitWidth = () => {
+        if (!viewportRef.current) return;
+        const vRect = viewportRef.current.getBoundingClientRect();
+        const pageW = currentPageManifest.width || 792;
+        const pageH = currentPageManifest.height || 612;
+        
+        const scaleX = vRect.width / pageW;
+        const scaleY = vRect.height / pageH;
+        const fitScale = Math.min(scaleX, scaleY);
+        
+        const targetZoom = Math.round((scaleX / fitScale) * 100);
+        setZoom(targetZoom);
+        setPanX(0);
+        
+        const baseHeight = pageH * fitScale;
+        const imgH = baseHeight * (targetZoom / 100);
+        setPanY(vRect.height / 2 - imgH / 2);
+      };
+
+      const handleFitPage = () => {
+        setZoom(100);
+        setPanX(0);
+        setPanY(0);
+      };
+
+      const handleActualSize = () => {
+        changeZoom(100);
+        setPanX(0);
+        setPanY(0);
+      };
+
+      const handleResetView = () => {
+        setZoom(100);
+        setPanX(0);
+        setPanY(0);
+      };
+
+      // Panning drag handlers
+      const handleMouseDown = (e) => {
+        if (spacePressed || e.button === 0) {
+          setIsPanning(true);
+          setDragStart({ x: e.clientX, y: e.clientY });
+          setPanStart({ x: panX, y: panY });
+          e.preventDefault();
+        }
+      };
+
+      const handleMouseMove = (e) => {
+        if (!isPanning) return;
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        setPanX(panStart.x + dx);
+        setPanY(panStart.y + dy);
+      };
+
+      const handleMouseUp = () => {
+        setIsPanning(false);
+      };
+
+      // Minimap navigation
+      const getMinimapViewport = () => {
+        if (!viewportRef.current) return { left: 0, top: 0, width: 100, height: 100 };
+        const vRect = viewportRef.current.getBoundingClientRect();
+        const pageW = currentPageManifest.width || 792;
+        const pageH = currentPageManifest.height || 612;
+        
+        const scaleX = vRect.width / pageW;
+        const scaleY = vRect.height / pageH;
+        const fitScale = Math.min(scaleX, scaleY);
+        
+        const baseWidth = pageW * fitScale;
+        const baseHeight = pageH * fitScale;
+        
+        const scale = zoom / 100;
+        const imgW = baseWidth * scale;
+        const imgH = baseHeight * scale;
+        
+        const wFrac = vRect.width / imgW;
+        const hFrac = vRect.height / imgH;
+        
+        const leftFrac = -panX / imgW;
+        const topFrac = -panY / imgH;
+        
+        return {
+          left: Math.max(0, Math.min(100, leftFrac * 100)),
+          top: Math.max(0, Math.min(100, topFrac * 100)),
+          width: Math.max(5, Math.min(100, wFrac * 100)),
+          height: Math.max(5, Math.min(100, hFrac * 100))
+        };
+      };
+
+      const minimapViewport = getMinimapViewport();
+
+      const handleMinimapClick = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = (e.clientX - rect.left) / rect.width;
+        const clickY = (e.clientY - rect.top) / rect.height;
+        
+        if (!viewportRef.current) return;
+        const vRect = viewportRef.current.getBoundingClientRect();
+        const pageW = currentPageManifest.width || 792;
+        const pageH = currentPageManifest.height || 612;
+        
+        const scaleX = vRect.width / pageW;
+        const scaleY = vRect.height / pageH;
+        const fitScale = Math.min(scaleX, scaleY);
+        
+        const baseWidth = pageW * fitScale;
+        const baseHeight = pageH * fitScale;
+        
+        const scale = zoom / 100;
+        const imgW = baseWidth * scale;
+        const imgH = baseHeight * scale;
+        
+        const targetPanX = vRect.width / 2 - clickX * imgW;
+        const targetPanY = vRect.height / 2 - clickY * imgH;
+        
+        setPanX(targetPanX);
+        setPanY(targetPanY);
+      };
+
+      // Handle click on a map pin — select + center, right panel shows details
       const handleMarkerClick = (fid) => {
         setActiveId(fid);
+        const f = findings.find(x => x.id === fid);
+        if (f) centerOnMarker(f);
       };
+
+      // Keyboard navigation: left/right arrows cycle through findings
+      useEffect(() => {
+        const handleKey = (e) => {
+          if (e.code === 'ArrowRight' || e.code === 'ArrowDown') {
+            e.preventDefault();
+            const idx = findings.findIndex(f => f.id === activeId);
+            const next = findings[(idx + 1) % findings.length];
+            if (next) selectFinding(next);
+          } else if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') {
+            e.preventDefault();
+            const idx = findings.findIndex(f => f.id === activeId);
+            const prev = findings[(idx - 1 + findings.length) % findings.length];
+            if (prev) selectFinding(prev);
+          }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+      }, [activeId, findings]);
 
       // Select page and synchronize active finding
       const selectPage = (p) => {
         setPageNo(p);
+        setOpenCalloutId(null);
         const pManifest = manifest.pages.find(pm => pm.page === p);
         if (pManifest && pManifest.markers && pManifest.markers.length > 0) {
           setActiveId(pManifest.markers[0].id);
         }
       };
 
-      // Handle selecting findings from list/sidebar
+      // Select finding triggers Google Maps-like transition sequence
       const selectFinding = (f) => {
         setActiveId(f.id);
-        if (f.page && f.page !== pageNo) {
+        setOpenCalloutId(null);
+        
+        // 1. Reset zoom out to fit view scale
+        setZoom(100);
+        
+        setTimeout(() => {
+          // 2. Change page
           setPageNo(f.page);
-        }
+          
+          setTimeout(() => {
+            // 3. Zoom back in and center on finding
+            setZoom(175);
+            centerOnMarker(f, 175);
+          }, 250);
+        }, 250);
       };
 
       return (
@@ -867,7 +1159,7 @@
                 <Icons.ArrowLeft size={16} /> Back to Dashboard
               </button>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{data.project.name} \u00b7 {findings.length} findings total</span>
+                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{data.project.name} &middot; {findings.length} Findings</span>
                 <a href={`${filesBase}/annotated.pdf`} download className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 px-4 py-2 text-xs font-bold text-white transition shadow-sm">
                   <Icons.Download size={14} /> Download PDF
                 </a>
@@ -906,56 +1198,265 @@
                 </ul>
               </div>
 
-              {/* Center panel: Focal Page Image with overlay SVG/DOM markers */}
-              <div className="rounded-xl border border-gray-200 bg-gray-200 p-4 shadow-inner flex flex-col justify-between items-stretch gap-3 min-h-[500px]">
-                <div className="flex items-center justify-between select-none">
-                  <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-300/40 text-xs font-semibold">
+              {/* Center panel: Focal Page Image with zoom/pan and overlays */}
+              <div className="rounded-xl border border-gray-200 bg-gray-200 shadow-inner flex flex-col justify-between items-stretch gap-0 relative overflow-hidden min-h-[500px] flex-1">
+                {/* Page header controls */}
+                <div className="flex items-center justify-between px-4 py-2 border-b bg-white select-none">
+                  <div className="flex items-center gap-2 border px-2 py-1 rounded bg-gray-50 text-xs font-semibold">
                     <button onClick={() => selectPage(Math.max(1, pageNo - 1))} className="text-gray-500 hover:text-teal-700 transition"><Icons.ChevronLeft size={16} /></button>
-                    <span className="text-gray-800 font-bold px-1.5 font-mono">{currentPageManifest.label} \u2014 {currentPageManifest.label === 'Page 1' ? 'General Layout & Details' : 'Details & Layout Plan'}</span>
+                    <span className="text-gray-800 font-bold px-1.5 font-mono">{currentPageManifest.label}</span>
                     <button onClick={() => selectPage(Math.min(manifest.page_count, pageNo + 1))} className="text-gray-500 hover:text-teal-700 transition"><Icons.ChevronRight size={16} /></button>
                   </div>
-                  <span className="text-xs font-semibold text-gray-500 bg-white/75 border px-2.5 py-1 rounded-lg font-mono leading-none">
+                  <span className="text-xs font-semibold text-gray-500 font-mono leading-none">
                     {pageMarkers.length} marker{pageMarkers.length !== 1 ? 's' : ''} on sheet
                   </span>
                 </div>
+                
+                {/* Zoom Toolbar */}
+                <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-2 border-b border-gray-200 select-none text-xs font-semibold">
+                  <div className="flex items-center gap-1 border-r pr-3 mr-1">
+                    <button 
+                      onClick={handleZoomOut}
+                      className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded border border-gray-300 text-gray-700 transition"
+                      title="Zoom Out"
+                    >
+                      Zoom Out (-)
+                    </button>
+                    <span className="w-12 text-center font-mono font-bold text-gray-700">
+                      {zoom}%
+                    </span>
+                    <button 
+                      onClick={handleZoomIn}
+                      className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded border border-gray-300 text-gray-700 transition"
+                      title="Zoom In"
+                    >
+                      Zoom In (+)
+                    </button>
+                  </div>
+                  
+                  {/* Zoom Slider */}
+                  <div className="flex items-center gap-2 border-r pr-4 mr-1">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Slider</span>
+                    <input 
+                      type="range"
+                      min="0"
+                      max={ZOOM_PRESETS.length - 1}
+                      value={getPresetIndex(zoom)}
+                      onChange={(e) => changeZoom(ZOOM_PRESETS[parseInt(e.target.value)])}
+                      className="w-32 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-700"
+                    />
+                  </div>
+                  
+                  {/* Preset Actions */}
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={handleFitWidth}
+                      className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
+                    >
+                      Fit Width
+                    </button>
+                    <button 
+                      onClick={handleFitPage}
+                      className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
+                    >
+                      Fit Page
+                    </button>
+                    <button 
+                      onClick={handleActualSize}
+                      className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
+                    >
+                      1:1 Actual Size
+                    </button>
+                    <button 
+                      onClick={handleResetView}
+                      className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
+                    >
+                      Reset View
+                    </button>
+                  </div>
+                  
+                  <div className="ml-auto text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Pan: Drag Mouse / Spacebar</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
+                  </div>
+                </div>
+                
+                {/* Drawing Viewport Box */}
+                <div 
+                  ref={viewportRef}
+                  className={`relative flex-1 overflow-hidden select-none outline-none ${spacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                >
+                  {/* Panning wrapper */}
+                  <div 
+                    className="relative origin-top-left bg-white shadow-lg border border-gray-300 rounded"
+                    style={{
+                      transform: `translate(${panX}px, ${panY}px)`,
+                      width: `${zoom}%`,
+                      transition: isPanning ? 'none' : 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                      aspectRatio: "11/8.5"
+                    }}
+                  >
+                    <img src={pageImage} className="w-full h-full object-contain pointer-events-none" />
 
-                {/* Target Focal Drawing Box */}
-                <div className="relative mx-auto max-w-4xl w-full bg-white shadow-lg border border-gray-300 rounded-lg overflow-hidden flex items-center justify-center select-none" style={{ aspectRatio: "11/8.5" }}>
-                  <img src={pageImage} className="w-full h-full object-contain pointer-events-none" />
+                    {/* ── Scope rectangle for ACTIVE marker (precise evidence region) ── */}
+                    {pageMarkers.map((m) => {
+                      if (m.id !== activeId) return null;
+                      const [x0, y0, x1, y1] = m.bbox;
+                      const bw = x1 - x0;
+                      const bh = y1 - y0;
+                      // Only show scope rect if there's meaningful area
+                      if (bw < 0.005 || bh < 0.005) return null;
+                      let scopeClr = "#dc2626"; // red
+                      if (m.severity === "Medium") scopeClr = "#d97706";
+                      if (m.severity === "Low") scopeClr = "#6b7280";
+                      return (
+                        <div
+                          key={`scope-${m.id}`}
+                          className="absolute pointer-events-none z-20"
+                          style={{
+                            left: `${x0 * 100}%`,
+                            top: `${y0 * 100}%`,
+                            width: `${bw * 100}%`,
+                            height: `${bh * 100}%`,
+                            border: `2px solid ${scopeClr}`,
+                            borderRadius: 2,
+                            boxShadow: `0 0 0 1px rgba(255,255,255,0.6), inset 0 0 0 1px rgba(255,255,255,0.3)`,
+                            background: `${scopeClr}18`,
+                          }}
+                        />
+                      );
+                    })}
 
-                  {/* Absolute positioned markers */}
-                  {pageMarkers.map((m) => {
-                    const [x0, y0, x1, y1] = m.bbox;
-                    const active = m.id === activeId;
-                    const hovered = m.id === hoveredId;
-                    const s = SEV_STYLE[m.severity] || SEV_STYLE.Medium;
-                    
-                    return (
-                      <div
-                        key={m.id}
-                        className="absolute cursor-pointer select-none"
-                        style={{
-                          left: `${x0 * 100}%`,
-                          top: `${y0 * 100}%`,
-                          width: `${(x1 - x0) * 100}%`,
-                          height: `${(y1 - y0) * 100}%`,
-                        }}
-                        onClick={() => handleMarkerClick(m.id)}
-                        onMouseEnter={() => setHoveredId(m.id)}
-                        onMouseLeave={() => setHoveredId(null)}
-                      >
-                        {/* Interactive Highlight Border */}
-                        <div className={`absolute inset-0 border-2 rounded transition-all ${active ? 'border-teal-600 ring-2 ring-teal-600/30' : hovered ? 'border-teal-500/80' : s.border}`} style={{ backgroundColor: active ? 'rgba(13, 148, 136, 0.08)' : hovered ? 'rgba(13, 148, 136, 0.03)' : 'transparent' }} />
-                        
-                        {/* ID Tag bubble */}
-                        <button
-                          className={`absolute -top-3.5 left-0 shadow-sm border border-white font-mono font-bold text-[9px] text-white px-1.5 py-0.5 rounded leading-none transition-all ${active ? 'bg-teal-700 ring-2 ring-teal-600/30 scale-105' : s.dot}`}
+                    {/* ── Circular pin markers ── */}
+                    {pageMarkers.map((m) => {
+                      const [x0, y0, x1, y1] = m.bbox;
+                      const cx = (x0 + x1) / 2;
+                      const cy = (y0 + y1) / 2;
+                      const active = m.id === activeId;
+                      const hovered = m.id === hoveredId;
+
+                      let pinBg = "#dc2626"; // High = red
+                      if (m.severity === "Medium") pinBg = "#d97706";
+                      if (m.severity === "Low") pinBg = "#6b7280";
+
+                      return (
+                        <div
+                          key={m.id}
+                          className="absolute z-30"
+                          style={{
+                            left: `${cx * 100}%`,
+                            top: `${cy * 100}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          onMouseEnter={() => setHoveredId(m.id)}
+                          onMouseLeave={() => setHoveredId(null)}
                         >
-                          {m.id}
-                        </button>
-                      </div>
-                    );
-                  })}
+                          {/* Pulsing ring on active pin */}
+                          {active && (
+                            <span
+                              className="absolute inset-0 rounded-full"
+                              style={{
+                                animation: 'pinPulse 1.6s cubic-bezier(0.4,0,0.6,1) infinite',
+                                background: pinBg,
+                                opacity: 0.35,
+                                transform: 'scale(2)',
+                              }}
+                            />
+                          )}
+
+                          {/* The pin button */}
+                          <button
+                            onClick={() => handleMarkerClick(m.id)}
+                            title={m.title}
+                            style={{
+                              background: pinBg,
+                              width: active ? 30 : 26,
+                              height: active ? 30 : 26,
+                              border: active ? '2.5px solid white' : '2px solid rgba(255,255,255,0.85)',
+                              borderRadius: '50%',
+                              boxShadow: active
+                                ? `0 0 0 2px ${pinBg}, 0 3px 10px rgba(0,0,0,0.4)`
+                                : '0 1px 5px rgba(0,0,0,0.35)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.18s ease',
+                              flexShrink: 0,
+                              position: 'relative',
+                            }}
+                          >
+                            <span style={{
+                              fontFamily: 'monospace', fontWeight: 800,
+                              fontSize: m.id.length > 4 ? 7.5 : 9,
+                              color: 'white', letterSpacing: '-0.5px',
+                              lineHeight: 1, userSelect: 'none',
+                            }}>
+                              {m.id}
+                            </span>
+                          </button>
+
+                          {/* Hover tooltip */}
+                          {hovered && !active && (
+                            <div style={{
+                              position: 'absolute', bottom: 'calc(100% + 6px)',
+                              left: '50%', transform: 'translateX(-50%)',
+                              background: 'rgba(15,23,42,0.95)', color: 'white',
+                              fontSize: 11, fontWeight: 500,
+                              padding: '4px 8px', borderRadius: 5,
+                              whiteSpace: 'nowrap', zIndex: 50,
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                              pointerEvents: 'none',
+                            }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: 700, marginRight: 4 }}>{m.id}</span>
+                              {m.title}
+                              <div style={{
+                                position: 'absolute', top: '100%', left: '50%',
+                                transform: 'translateX(-50%)',
+                                border: '5px solid transparent',
+                                borderTopColor: 'rgba(15,23,42,0.95)',
+                              }} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Minimap Overlay inside viewport container */}
+                  <div 
+                    className="absolute top-4 right-4 z-20 w-36 aspect-[11/8.5] bg-white border border-gray-300 rounded shadow-md overflow-hidden cursor-pointer select-none"
+                    onClick={handleMinimapClick}
+                  >
+                    <img src={pageImage} className="w-full h-full object-contain opacity-60 pointer-events-none" />
+                    
+                    {/* Markers on Minimap */}
+                    {pageMarkers.map((m) => {
+                      const [x0, y0, x1, y1] = m.bbox;
+                      const cx = (x0 + x1) / 2;
+                      const cy = (y0 + y1) / 2;
+                      return (
+                        <div 
+                          key={m.id}
+                          className="absolute w-1.5 h-1.5 rounded-full bg-red-600 border border-white -translate-x-1/2 -translate-y-1/2"
+                          style={{ left: `${cx * 100}%`, top: `${cy * 100}%` }}
+                        />
+                      );
+                    })}
+                    
+                    {/* Viewport Indicator on Minimap */}
+                    <div 
+                      className="absolute border border-teal-600 bg-teal-600/10 pointer-events-none"
+                      style={{
+                        left: `${minimapViewport.left}%`,
+                        top: `${minimapViewport.top}%`,
+                        width: `${minimapViewport.width}%`,
+                        height: `${minimapViewport.height}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -979,7 +1480,7 @@
                       <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold border-b border-gray-100 pb-2">
                         <div>
                           <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Sheet / Page</dt>
-                          <dd className="text-gray-700 mt-0.5">p{sel.page} \u00b7 {sel.sheet || 'N/A'}</dd>
+                          <dd className="text-gray-700 mt-0.5">p{sel.page} • {sel.sheet || 'N/A'}</dd>
                         </div>
                         <div>
                           <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Rule Code</dt>
@@ -1000,8 +1501,12 @@
 
                 {/* All findings shortcuts */}
                 <div className="rounded-xl border border-gray-200 bg-white shadow-md flex-1 flex flex-col min-h-[200px]">
-                  <div className="border-b border-gray-200 px-4 py-3 select-none">
-                    <span className="text-xs font-bold text-gray-900">All Project Findings ({findings.length})</span>
+                  <div className="border-b border-gray-200 px-4 py-3 select-none flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900">All Findings</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400 font-medium hidden sm:block">↑↓ keys to navigate</span>
+                      <span className="inline-flex items-center justify-center bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold w-5 h-5">{findings.length}</span>
+                    </div>
                   </div>
                   <ul className="divide-y divide-gray-100 overflow-y-auto flex-1 max-h-[300px]">
                     {findings.map((f) => (

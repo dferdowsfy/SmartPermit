@@ -2,9 +2,10 @@
 annotate.py — burn AI-review findings onto a PDF using PyMuPDF (fitz).
 
 Input  : a source PDF + a list of findings (the LLM output).
-Output : an annotated PDF, per-page PNG thumbnails (with the marks baked in),
-         a full-resolution PNG of each page, and a manifest.json the frontend
-         uses to draw the Apple-Preview-style sidebar marks and overlay markers.
+Output : an annotated PDF (for download), per-page PNG thumbnails (with marks
+         baked in for the sidebar overview), clean full-resolution PNGs (no
+         burned-in annotations, overlays are handled by the HTML viewer), and
+         a manifest.json the frontend uses to draw pin overlays.
 
 Each finding may carry:
     id, severity ("High"|"Medium"|"Low"), title, page (1-based),
@@ -13,7 +14,7 @@ Findings without a page (package-level) are attached to page 1 as notes.
 """
 
 from __future__ import annotations
-import json, os
+import json, os, re
 from typing import Any
 import fitz  # PyMuPDF
 
@@ -24,10 +25,40 @@ SEV_COLOR = {
 }
 
 
-def _rect_from_bbox(page: fitz.Page, bbox: list[float] | None) -> fitz.Rect:
+def _rect_from_bbox(page: fitz.Page, f: dict) -> fitz.Rect:
     w, h = page.rect.width, page.rect.height
+
+    # Priority 1 & 2: exact text / OCR match using search_for
+    search_targets = []
+
+    # Check search_text field
+    st = f.get("search_text")
+    if st:
+        search_targets.append(st)
+
+    # Extract quoted text from evidence
+    ev = f.get("evidence", "")
+    if ev:
+        single_quotes = re.findall(r"'(.*?)'", ev)
+        double_quotes = re.findall(r'"(.*?)"', ev)
+        search_targets.extend(single_quotes)
+        search_targets.extend(double_quotes)
+        # Also try the raw evidence text if short enough
+        clean_ev = ev.strip('"\'')
+        if 3 < len(clean_ev) < 60:
+            search_targets.append(clean_ev)
+
+    for target in search_targets:
+        target = target.strip()
+        if not target or len(target) < 3:
+            continue
+        rects = page.search_for(target)
+        if rects:
+            return rects[0]
+
+    # Priority 3: Fallback to model-generated coordinates
+    bbox = f.get("bbox")
     if not bbox:
-        # default: small box in the upper-left if no location was returned
         return fitz.Rect(0.06 * w, 0.10 * h, 0.30 * w, 0.20 * h)
     x0, y0, x1, y1 = bbox
     return fitz.Rect(x0 * w, y0 * h, x1 * w, y1 * h)
@@ -39,7 +70,7 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
     doc = fitz.open(src_pdf)
     n_pages = doc.page_count
 
-    # group findings by page (1-based); package-level -> page 1
+    # Group findings by page (1-based); package-level → page 1
     by_page: dict[int, list[dict]] = {}
     for f in findings:
         p = f.get("page") or 1
@@ -54,13 +85,20 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
         page_findings = by_page.get(pno + 1, [])
         markers = []
 
+        # ─── Step 1: Render CLEAN full-res PNG BEFORE adding any annotations ───
+        # This is what the HTML viewer displays — crisp, uncluttered drawings.
+        full = page.get_pixmap(matrix=fitz.Matrix(page_zoom, page_zoom))
+        full_name = f"page-{pno+1:02d}.png"
+        full.save(os.path.join(out_dir, full_name))
+
+        # ─── Step 2: Add PDF annotations (for download PDF + thumbnail preview) ─
         for f in page_findings:
             sev = f.get("severity", "Medium")
             color = SEV_COLOR.get(sev, SEV_COLOR["Medium"])
             fid = f.get("id", "?")
-            rect = _rect_from_bbox(page, f.get("bbox"))
+            rect = _rect_from_bbox(page, f)
 
-            # 1) location rectangle
+            # Thin bordered rectangle showing the finding region
             try:
                 rann = page.add_rect_annot(rect)
                 rann.set_colors(stroke=color)
@@ -70,27 +108,30 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
             except Exception:
                 pass
 
-            # 2) visible label bubble (finding id) drawn above the rect so it
-            #    renders reliably in both the PDF and the raster thumbnails
+            # Small colored label bubble above the rect with the finding ID
             try:
                 lbl = f" {fid} "
                 lab_w = max(30, 5.6 * len(lbl) + 6)
-                lab = fitz.Rect(rect.x0, max(2, rect.y0 - 13), rect.x0 + lab_w, max(13, rect.y0 - 1))
+                lab = fitz.Rect(rect.x0, max(2, rect.y0 - 13),
+                                rect.x0 + lab_w, max(13, rect.y0 - 1))
                 page.draw_rect(lab, color=color, fill=color, width=0)
                 page.insert_textbox(lab, lbl, fontsize=7.5, color=(1, 1, 1),
                                     fontname="hebo", align=1)
             except Exception:
                 pass
 
-            # 3) sticky note (popup) with the full finding detail
+            # Sticky note popup with full finding detail
             try:
                 note = (
-                    f"[{fid}] {sev} — {f.get('title','')}\n"
-                    f"Code: {f.get('code','')}\n\n"
-                    f"Evidence: {f.get('evidence','')}\n\n"
-                    f"Required correction: {f.get('correction','')}"
+                    f"[{fid}] {sev} — {f.get('title', '')}\n"
+                    f"Code: {f.get('code', '')}\n\n"
+                    f"Evidence: {f.get('evidence', '')}\n\n"
+                    f"Required correction: {f.get('correction', '')}"
                 )
-                ta = page.add_text_annot(fitz.Point(min(rect.x1 + 4, w - 20), rect.y0), note, icon="Note")
+                ta = page.add_text_annot(
+                    fitz.Point(min(rect.x1 + 4, w - 20), rect.y0),
+                    note, icon="Note"
+                )
                 ta.set_colors(stroke=color)
                 ta.update()
             except Exception:
@@ -100,17 +141,16 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
                 "id": fid, "severity": sev, "title": f.get("title", ""),
                 "code": f.get("code", ""), "evidence": f.get("evidence", ""),
                 "correction": f.get("correction", ""),
-                "bbox": f.get("bbox") or [round(rect.x0 / w, 4), round(rect.y0 / h, 4),
-                                          round(rect.x1 / w, 4), round(rect.y1 / h, 4)],
+                "x": round(rect.x0, 2),
+                "y": round(rect.y0, 2),
+                "bbox": [round(rect.x0 / w, 4), round(rect.y0 / h, 4),
+                         round(rect.x1 / w, 4), round(rect.y1 / h, 4)],
             })
 
-        # render thumbnail + full page (after annotating, so marks are baked in)
+        # ─── Step 3: Render annotated THUMBNAIL (marks baked in for sidebar) ────
         thumb = page.get_pixmap(matrix=fitz.Matrix(thumb_zoom, thumb_zoom))
-        full = page.get_pixmap(matrix=fitz.Matrix(page_zoom, page_zoom))
         thumb_name = f"page-{pno+1:02d}.thumb.png"
-        full_name = f"page-{pno+1:02d}.png"
         thumb.save(os.path.join(out_dir, thumb_name))
-        full.save(os.path.join(out_dir, full_name))
 
         manifest_pages.append({
             "page": pno + 1,
@@ -123,20 +163,24 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
             "markers": markers,
         })
 
+    # Save the fully annotated PDF for download
     annotated_path = os.path.join(out_dir, "annotated.pdf")
     doc.save(annotated_path, deflate=True)
     doc.close()
 
-    manifest = {"source": os.path.basename(src_pdf), "annotated_pdf": "annotated.pdf",
-                "page_count": n_pages, "pages": manifest_pages}
-    with open(os.path.join(out_dir, "manifest.json"), "w") as fh:
-        json.dump(manifest, fh, indent=2)
+    manifest = {
+        "source": os.path.basename(src_pdf),
+        "annotated_pdf": "annotated.pdf",
+        "page_count": n_pages,
+        "pages": manifest_pages,
+    }
+    with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, indent=2, ensure_ascii=False)
     return manifest
 
 
 def _sheet_label(page: fitz.Page) -> str:
     """Pull a sheet id like 'A-101' from the page text if present."""
-    import re
     txt = page.get_text("text")
     m = re.search(r"\b([A-Z]{1,2}-\d{3})\b", txt)
     return m.group(1) if m else f"Page {page.number + 1}"
