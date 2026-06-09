@@ -916,42 +916,43 @@
         };
       }, [zoom]);
 
-      // Calculate centering offset
-      const centerOnMarker = (f, targetZoom = zoom) => {
+      // Center viewport on a finding marker.
+      // pageManifest defaults to currentPageManifest (same-page clicks),
+      // but must be passed explicitly when navigating to a different page.
+      const centerOnMarker = (f, targetZoom = zoom, pageManifest = null) => {
         if (!f || !viewportRef.current) return;
-        
-        // Wait a small frame for dimensions to update
+
         setTimeout(() => {
           if (!viewportRef.current) return;
           const rect = viewportRef.current.getBoundingClientRect();
-          const containerWidth = rect.width;
-          const containerHeight = rect.height;
-          
-          const pageW = currentPageManifest.width || 792;
-          const pageH = currentPageManifest.height || 612;
-          
-          const scaleX = containerWidth / pageW;
-          const scaleY = containerHeight / pageH;
-          const fitScale = Math.min(scaleX, scaleY);
-          
-          const baseWidth = pageW * fitScale;
-          const baseHeight = pageH * fitScale;
-          
+          const containerW = rect.width;
+          const containerH = rect.height;
+
+          // Resolve page dimensions — use explicit manifest if provided
+          // (avoids stale closure when navigating between pages)
+          const pm = pageManifest ||
+            manifest.pages.find(p => p.page === f.page) ||
+            manifest.pages[0];
+          const pageW = pm.width  || 792;
+          const pageH = pm.height || 612;
+
+          // The panning div geometry:
+          //   imgW = containerW * (targetZoom / 100)   ← driven by width: ${zoom}%
+          //   imgH = imgW * (pageH / pageW)            ← driven by aspectRatio
+          const imgW = containerW * (targetZoom / 100);
+          const imgH = imgW * (pageH / pageW);
+
           const [x0, y0, x1, y1] = f.bbox || [0.5, 0.5, 0.5, 0.5];
           const cx = (x0 + x1) / 2;
           const cy = (y0 + y1) / 2;
-          
-          const scale = targetZoom / 100;
-          const imgW = baseWidth * scale;
-          const imgH = baseHeight * scale;
-          
-          // Center point in local viewport coordinate system:
-          const targetPanX = containerWidth / 2 - cx * imgW;
-          const targetPanY = containerHeight / 2 - cy * imgH;
-          
+
+          // Pan so the finding center appears at the viewport center
+          const targetPanX = containerW / 2 - cx * imgW;
+          const targetPanY = containerH / 2 - cy * imgH;
+
           setPanX(targetPanX);
           setPanY(targetPanY);
-        }, 50);
+        }, 60);
       };
 
       // Zoom helpers
@@ -977,22 +978,18 @@
       };
 
       const handleFitWidth = () => {
+        // At zoom=100% the div fills the container width.
+        // To fit PAGE HEIGHT in the viewport we need a zoom < 100 for portrait pages.
         if (!viewportRef.current) return;
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width || 792;
+        const pageW = currentPageManifest.width  || 792;
         const pageH = currentPageManifest.height || 612;
-        
-        const scaleX = vRect.width / pageW;
-        const scaleY = vRect.height / pageH;
-        const fitScale = Math.min(scaleX, scaleY);
-        
-        const targetZoom = Math.round((scaleX / fitScale) * 100);
-        setZoom(targetZoom);
+        // imgW = vRect.width * (zoom/100), imgH = imgW * pageH/pageW
+        // We want imgH = vRect.height → zoom = vRect.height / (vRect.width * pageH/pageW) * 100
+        const targetZoom = Math.round((vRect.height / (vRect.width * pageH / pageW)) * 100);
+        setZoom(Math.min(targetZoom, 400));
         setPanX(0);
-        
-        const baseHeight = pageH * fitScale;
-        const imgH = baseHeight * (targetZoom / 100);
-        setPanY(vRect.height / 2 - imgH / 2);
+        setPanY(0);
       };
 
       const handleFitPage = () => {
@@ -1035,35 +1032,27 @@
         setIsPanning(false);
       };
 
-      // Minimap navigation
+      // Minimap: what fraction of the panning div is visible in the viewport?
       const getMinimapViewport = () => {
         if (!viewportRef.current) return { left: 0, top: 0, width: 100, height: 100 };
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width || 792;
+        const pageW = currentPageManifest.width  || 792;
         const pageH = currentPageManifest.height || 612;
-        
-        const scaleX = vRect.width / pageW;
-        const scaleY = vRect.height / pageH;
-        const fitScale = Math.min(scaleX, scaleY);
-        
-        const baseWidth = pageW * fitScale;
-        const baseHeight = pageH * fitScale;
-        
-        const scale = zoom / 100;
-        const imgW = baseWidth * scale;
-        const imgH = baseHeight * scale;
-        
-        const wFrac = vRect.width / imgW;
-        const hFrac = vRect.height / imgH;
-        
+
+        // Panning div true pixel dimensions
+        const imgW = vRect.width * (zoom / 100);
+        const imgH = imgW * (pageH / pageW);
+
+        const wFrac   = vRect.width  / imgW;
+        const hFrac   = vRect.height / imgH;
         const leftFrac = -panX / imgW;
-        const topFrac = -panY / imgH;
-        
+        const topFrac  = -panY / imgH;
+
         return {
-          left: Math.max(0, Math.min(100, leftFrac * 100)),
-          top: Math.max(0, Math.min(100, topFrac * 100)),
-          width: Math.max(5, Math.min(100, wFrac * 100)),
-          height: Math.max(5, Math.min(100, hFrac * 100))
+          left:   Math.max(0, Math.min(100, leftFrac * 100)),
+          top:    Math.max(0, Math.min(100, topFrac  * 100)),
+          width:  Math.max(5, Math.min(100, wFrac    * 100)),
+          height: Math.max(5, Math.min(100, hFrac    * 100)),
         };
       };
 
@@ -1073,28 +1062,17 @@
         const rect = e.currentTarget.getBoundingClientRect();
         const clickX = (e.clientX - rect.left) / rect.width;
         const clickY = (e.clientY - rect.top) / rect.height;
-        
+
         if (!viewportRef.current) return;
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width || 792;
+        const pageW = currentPageManifest.width  || 792;
         const pageH = currentPageManifest.height || 612;
-        
-        const scaleX = vRect.width / pageW;
-        const scaleY = vRect.height / pageH;
-        const fitScale = Math.min(scaleX, scaleY);
-        
-        const baseWidth = pageW * fitScale;
-        const baseHeight = pageH * fitScale;
-        
-        const scale = zoom / 100;
-        const imgW = baseWidth * scale;
-        const imgH = baseHeight * scale;
-        
-        const targetPanX = vRect.width / 2 - clickX * imgW;
-        const targetPanY = vRect.height / 2 - clickY * imgH;
-        
-        setPanX(targetPanX);
-        setPanY(targetPanY);
+
+        const imgW = vRect.width * (zoom / 100);
+        const imgH = imgW * (pageH / pageW);
+
+        setPanX(vRect.width  / 2 - clickX * imgW);
+        setPanY(vRect.height / 2 - clickY * imgH);
       };
 
       // Handle click on a map pin — select + center, right panel shows details
@@ -1133,24 +1111,29 @@
         }
       };
 
-      // Select finding triggers Google Maps-like transition sequence
+      // Select finding: navigate page, zoom in, center — Bluebeam-style
       const selectFinding = (f) => {
         setActiveId(f.id);
-        setOpenCalloutId(null);
-        
-        // 1. Reset zoom out to fit view scale
+
+        // Resolve the target page manifest NOW (not inside a stale closure)
+        const targetPageManifest =
+          manifest.pages.find(pm => pm.page === f.page) || manifest.pages[0];
+
+        // 1. Zoom out to fit
         setZoom(100);
-        
+        setPanX(0);
+        setPanY(0);
+
         setTimeout(() => {
-          // 2. Change page
+          // 2. Switch page
           setPageNo(f.page);
-          
+
           setTimeout(() => {
-            // 3. Zoom back in and center on finding
+            // 3. Zoom back in and center precisely on the finding
             setZoom(175);
-            centerOnMarker(f, 175);
-          }, 250);
-        }, 250);
+            centerOnMarker(f, 175, targetPageManifest);
+          }, 280);
+        }, 220);
       };
 
       return (
@@ -1323,17 +1306,18 @@
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
-                  {/* Panning wrapper */}
+                  {/* Panning wrapper — aspect ratio matches the ACTUAL page dimensions
+                      so pins positioned at cx*100%, cy*100% map 1:1 to image content */}
                   <div 
                     className="relative origin-top-left bg-white shadow-lg border border-gray-300 rounded"
                     style={{
                       transform: `translate(${panX}px, ${panY}px)`,
                       width: `${zoom}%`,
                       transition: isPanning ? 'none' : 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                      aspectRatio: "11/8.5"
+                      aspectRatio: `${currentPageManifest.width || 792} / ${currentPageManifest.height || 612}`
                     }}
                   >
-                    <img src={pageImage} className="w-full h-full object-contain pointer-events-none" />
+                    <img src={pageImage} className="w-full h-full object-fill pointer-events-none" />
 
                     {/* ── Scope rectangle + SVG crosshair/arrow for ACTIVE marker ── */}
                     {pageMarkers.map((m) => {
