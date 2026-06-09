@@ -109,3 +109,33 @@ def generate_report(review_id: str):
         "report_url": report_url,
         "file_name": output_filename
     })
+
+
+@app.get("/api/reviews")
+def list_reviews():
+    reviews = []
+    for d in os.listdir(REVIEWS):
+        p = os.path.join(REVIEWS, d, "review.json")
+        if os.path.exists(p):
+            try:
+                mtime = os.path.getmtime(p)
+                with open(p) as f:
+                    data = json.load(f)
+                    reviews.append({
+                        "id": d,
+                        "project": data.get("project", {}),
+                        "result": data.get("result", {}),
+                        "findings_count": len(data.get("findings", [])),
+                        "mtime": mtime
+                    })
+            except:
+                pass
+    reviews.sort(key=lambda x: x["mtime"], reverse=True)
+    return JSONResponse(reviews)
+
+@app.get("/api/reviews/{review_id}/load")
+def load_review(review_id: str):
+    p = os.path.join(REVIEWS, review_id, "review.json")
+    if os.path.exists(p):
+        return JSONResponse(json.load(open(p)))
+    return JSONResponse({"error": "not found"}, 404)
