@@ -21,7 +21,6 @@ ogpe-viewer-v2.jsx   front-end: code-set picker + Preview-style annotation viewe
 ## Run it
 
 ```bash
-cd backend
 pip install -r requirements.txt
 
 # 1) regenerate the sample set (optional; already included)
@@ -34,11 +33,31 @@ python annotate.py sample/modelo-d.pdf sample/findings.json review_output
 # 3) run a full review (offline mock unless a key is set)
 python review_engine.py sample/modelo-d.pdf --code-set unified_pr --mock
 
-# 4) serve the API
+# 4) serve the API and browser viewer
 uvicorn app:app --reload
+#    UI   http://localhost:8000/
 #    GET  http://localhost:8000/api/code-sets
 #    POST http://localhost:8000/api/review   (multipart: file, code_set, language, ...)
 ```
+
+## Saved review history / token-free viewer testing
+
+Every submitted review is persisted under `reviews/{review_id}/` with the
+source PDF (`source.pdf`), API payload (`review.json`), PyMuPDF-generated
+viewer manifest, page images, thumbnails, and `annotated.pdf`. The web UI now
+includes a **History** screen that lists those submissions and can reopen either
+the dashboard or the interactive annotation viewer without calling the LLM.
+
+Useful endpoints:
+
+- `GET /api/reviews` lists saved submissions and artifact availability.
+- `GET /api/reviews/{id}/load` loads a saved review payload for the dashboard or
+  viewer without re-running AI.
+- `POST /api/reviews/{id}/rerender` rebuilds `annotated.pdf`, page PNGs,
+  thumbnails, and `manifest.json` from the stored `source.pdf` plus cached
+  findings only, so viewer work can be tested without consuming tokens.
+- `POST /api/reviews/{id}/generate-report` creates/downloads the correction
+  notice PDF from cached findings.
 
 ## Live AI
 

@@ -344,7 +344,7 @@
       ["Preparing official correction notice", "Preparando notificación formal de correcciones"],
     ];
 
-    function UploadScreen({ onRun, onLogout, codeSets }) {
+    function UploadScreen({ onRun, onLogout, onHistory, codeSets }) {
       const [projectName, setProjectName] = useState("Modelo D - Residencia");
       const [municipality, setMunicipality] = useState("San Juan");
       const [permitType, setPermitType] = useState("Construction");
@@ -427,6 +427,9 @@
               right={
                 <>
                   <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
+                  <button onClick={onHistory} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
+                    <Icons.FileText size={15} /> History
+                  </button>
                   <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
                     <Icons.LogOut size={15} /> Logout
                   </button>
@@ -583,8 +586,221 @@
       );
     }
 
+    // Saved Review History
+    function HistoryScreen({ onOpenReview, onOpenViewer, onNewSubmission, onLogout }) {
+      const [reviews, setReviews] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState("");
+      const [busyId, setBusyId] = useState("");
+
+      const loadHistory = async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch("/api/reviews");
+          if (!res.ok) throw new Error("Could not load review history");
+          const data = await res.json();
+          setReviews(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        loadHistory();
+      }, []);
+
+      const formatWhen = (review) => {
+        const raw = review.created_at || (review.mtime ? new Date(review.mtime * 1000).toISOString() : null);
+        if (!raw) return "Unknown date";
+        try {
+          return new Date(raw).toLocaleString();
+        } catch (err) {
+          return raw;
+        }
+      };
+
+      const loadReview = async (review, target = "results") => {
+        setBusyId(`${review.id}:${target}`);
+        try {
+          const res = await fetch(`/api/reviews/${review.id}/load`);
+          if (!res.ok) throw new Error("Saved review could not be loaded");
+          const data = await res.json();
+          if (target === "viewer") {
+            onOpenViewer(data);
+          } else {
+            onOpenReview(data);
+          }
+        } catch (err) {
+          alert("Error loading saved review: " + err.message);
+        } finally {
+          setBusyId("");
+        }
+      };
+
+      const rerenderReview = async (review) => {
+        setBusyId(`${review.id}:rerender`);
+        try {
+          const res = await fetch(`/api/reviews/${review.id}/rerender`, { method: "POST" });
+          if (!res.ok) {
+            const payload = await res.json().catch(() => ({}));
+            throw new Error(payload.error || "Could not rebuild viewer assets");
+          }
+          const data = await res.json();
+          onOpenViewer(data);
+        } catch (err) {
+          alert("Error rebuilding viewer from saved findings: " + err.message);
+        } finally {
+          setBusyId("");
+        }
+      };
+
+      const downloadReport = async (review) => {
+        setBusyId(`${review.id}:report`);
+        try {
+          const res = await fetch(`/api/reviews/${review.id}/generate-report`, { method: "POST" });
+          if (!res.ok) throw new Error("Could not generate correction notice PDF");
+          const payload = await res.json();
+          const a = document.createElement("a");
+          a.href = payload.report_url;
+          a.download = payload.file_name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          await loadHistory();
+        } catch (err) {
+          alert("Error downloading correction notice: " + err.message);
+        } finally {
+          setBusyId("");
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col">
+            <AppHeader
+              left={
+                <button onClick={onNewSubmission} className="inline-flex items-center gap-2 text-teal-700 hover:text-teal-900 font-bold transition">
+                  <Icons.ArrowLeft size={16} /> New Submission
+                </button>
+              }
+              right={
+                <>
+                  <button onClick={loadHistory} disabled={loading} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline disabled:opacity-50">
+                    {loading ? <Icons.Loader2 size={15} /> : <Icons.ClipboardList size={15} />} Refresh
+                  </button>
+                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
+                    <Icons.LogOut size={15} /> Logout
+                  </button>
+                </>
+              }
+            />
+
+            <main className="mx-auto max-w-7xl w-full px-4 py-8 flex-1">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Submission History</h2>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Previously submitted drawing packages and cached AI outputs</p>
+                  <p className="mt-3 max-w-3xl text-sm text-gray-600 leading-relaxed">
+                    Saved reviews can be reopened without calling the LLM again. Use <span className="font-bold text-teal-700">Open Viewer</span> to test annotations and thumbnails from cached results, or <span className="font-bold text-teal-700">Rebuild Viewer</span> to regenerate annotated PDFs/images from the stored source PDF and findings only.
+                  </p>
+                </div>
+                <button onClick={onNewSubmission} className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 text-sm transition shadow">
+                  <Icons.Upload size={16} /> Submit New Plans
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
+                <div className="border-b border-gray-200 px-5 py-4 flex items-center justify-between bg-gray-50/60">
+                  <span className="text-sm font-bold text-gray-900">Saved Reviews</span>
+                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-500">{reviews.length} total</span>
+                </div>
+
+                {loading ? (
+                  <div className="p-10 text-center text-sm font-semibold text-gray-500 flex items-center justify-center gap-2">
+                    <Icons.Loader2 size={18} /> Loading saved submissions...
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="p-10 text-center">
+                    <Icons.FileText size={34} className="mx-auto text-gray-300" />
+                    <h3 className="mt-3 text-base font-bold text-gray-900">No saved submissions yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">Run a plan review once, then return here to reopen the viewer without spending tokens.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {reviews.map((review) => {
+                      const project = review.project || {};
+                      const result = review.result || {};
+                      const ready = (result.readiness_score || 0) >= 70;
+                      const pdfUrl = `${review.files_base}/annotated.pdf`;
+                      const isBusy = busyId.startsWith(`${review.id}:`);
+                      return (
+                        <li key={review.id} className="p-5 hover:bg-gray-50/70 transition">
+                          <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-base font-bold text-gray-900 truncate">{project.name || "Untitled Project"}</h3>
+                                <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-bold ${ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                                  {ready ? <Icons.CheckCircle2 size={11} /> : <Icons.AlertTriangle size={11} />}
+                                  {result.status || "Cached Review"}
+                                </span>
+                                <span className="rounded-lg border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-bold text-gray-500 font-mono">ID {review.id}</span>
+                              </div>
+                              <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-2 text-xs text-gray-500">
+                                <span><b className="text-gray-700">Saved:</b> {formatWhen(review)}</span>
+                                <span><b className="text-gray-700">Municipality:</b> {project.municipality || "N/A"}</span>
+                                <span><b className="text-gray-700">Findings:</b> {review.findings_count}</span>
+                                <span><b className="text-gray-700">Source:</b> {review.source_file_name || "source.pdf"}</span>
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
+                                <span className={review.has_source_pdf ? "text-emerald-700" : "text-red-600"}>{review.has_source_pdf ? "✓ Source PDF stored" : "Missing source PDF"}</span>
+                                <span className={review.has_manifest ? "text-emerald-700" : "text-amber-600"}>{review.has_manifest ? "✓ Viewer manifest" : "Needs viewer rebuild"}</span>
+                                <span className={review.has_annotated_pdf ? "text-emerald-700" : "text-amber-600"}>{review.has_annotated_pdf ? "✓ Annotated PDF" : "No annotated PDF"}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap xl:justify-end gap-2 shrink-0">
+                              <button onClick={() => loadReview(review, "results")} disabled={isBusy} className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-white transition shadow-sm">
+                                {busyId === `${review.id}:results` ? <Icons.Loader2 size={14} /> : <Icons.ClipboardList size={14} />} Dashboard
+                              </button>
+                              <button onClick={() => loadReview(review, "viewer")} disabled={isBusy || !review.has_manifest} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                                {busyId === `${review.id}:viewer` ? <Icons.Loader2 size={14} /> : <Icons.FileText size={14} />} Open Viewer
+                              </button>
+                              <button onClick={() => rerenderReview(review)} disabled={isBusy || !review.has_source_pdf} className="inline-flex items-center justify-center gap-2 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-teal-800 transition shadow-sm">
+                                {busyId === `${review.id}:rerender` ? <Icons.Loader2 size={14} /> : <Icons.CheckCircle2 size={14} />} Rebuild Viewer
+                              </button>
+                              <button onClick={() => downloadReport(review)} disabled={isBusy} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                                {busyId === `${review.id}:report` ? <Icons.Loader2 size={14} /> : <Icons.Download size={14} />} Report
+                              </button>
+                              {review.has_annotated_pdf && (
+                                <a href={pdfUrl} download className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                                  <Icons.Download size={14} /> PDF
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
     // Results Dashboard
-    function ResultsScreen({ data, onOpenViewer, onLogout, onBack }) {
+    function ResultsScreen({ data, onOpenViewer, onLogout, onBack, onHistory }) {
       const [selId, setSelId] = useState(data.findings[0]?.id || "");
       const findings = data.findings;
       const result = data.result;
@@ -649,6 +865,9 @@
               right={
                 <>
                   <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
+                  <button onClick={onHistory} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
+                    <Icons.FileText size={15} /> History
+                  </button>
                   <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
                     <Icons.LogOut size={15} /> Logout
                   </button>
@@ -1670,11 +1889,21 @@
         setScreen("results");
       };
 
+      const handleOpenSavedReview = (data) => {
+        setReviewData(data);
+        setScreen("results");
+      };
+
+      const handleOpenSavedViewer = (data) => {
+        setReviewData(data);
+        setScreen("viewer");
+      };
+
       return (
         <div>
           {/* Developer screen override sidebar for rapid previewing */}
           <div className="fixed bottom-3 right-3 z-50 flex gap-1 rounded-lg border border-gray-300 bg-white/95 p-1 text-[11px] shadow-md select-none">
-            {["login", "upload", "results", "viewer"].map((s) => (
+            {["login", "upload", "history", "results", "viewer"].map((s) => (
               <button
                 key={s}
                 onClick={() => {
@@ -1696,8 +1925,9 @@
           </div>
 
           {screen === "login" && <LoginScreen onLogin={handleLogin} />}
-          {screen === "upload" && <UploadScreen onRun={handleRun} onLogout={() => setScreen("login")} codeSets={codeSets} />}
-          {screen === "results" && <ResultsScreen data={reviewData} onOpenViewer={() => setScreen("viewer")} onLogout={() => setScreen("login")} onBack={() => setScreen("upload")} />}
+          {screen === "upload" && <UploadScreen onRun={handleRun} onLogout={() => setScreen("login")} onHistory={() => setScreen("history")} codeSets={codeSets} />}
+          {screen === "history" && <HistoryScreen onOpenReview={handleOpenSavedReview} onOpenViewer={handleOpenSavedViewer} onNewSubmission={() => setScreen("upload")} onLogout={() => setScreen("login")} />}
+          {screen === "results" && <ResultsScreen data={reviewData} onOpenViewer={() => setScreen("viewer")} onLogout={() => setScreen("login")} onBack={() => setScreen("upload")} onHistory={() => setScreen("history")} />}
           {screen === "viewer" && <ViewerScreen data={reviewData} onBack={() => setScreen("results")} />}
         </div>
       );
