@@ -592,25 +592,31 @@
       // Download full PDF helper
       const pdfUrl = `${data.files_base}/annotated.pdf`;
 
-      // Download correction notice report
-      const handleDownloadNotice = () => {
-        let txt = `GOVIERNO DE PUERTO RICO\nOFICINA DE GERENCIA DE PERMISOS\n\nAI PLAN REVIEW CORRECTION NOTICE\n--------------------------------------------\n`;
-        txt += `Project Name: ${project.name}\nMunicipality: ${project.municipality}\nPermit Type: ${project.permit_type}\n`;
-        txt += `Code Set: ${result.code_set_name}\nReadiness Score: ${result.readiness_score}/100\nStatus: ${result.status}\n\n`;
-        txt += `FINDINGS SUMMARY (${findings.length} findings):\n`;
-        findings.forEach(f => {
-          txt += `\n[${f.id}] [${f.severity}] Code: ${f.code} (Sheet: ${f.sheet || 'N/A'})\n`;
-          txt += `Title: ${f.title}\n`;
-          txt += `Evidence: ${f.evidence}\n`;
-          txt += `Correction: ${f.correction}\n`;
-        });
-        const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `correction-notice-${rid}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
+      const [generatingPDF, setGeneratingPDF] = useState(false);
+
+      // Download correction notice report (formatted PDF from backend)
+      const handleDownloadNotice = async () => {
+        setGeneratingPDF(true);
+        try {
+          const res = await fetch(`/api/reviews/${rid}/generate-report`, {
+            method: "POST"
+          });
+          if (!res.ok) {
+            throw new Error("Failed to generate PDF report from server");
+          }
+          const payload = await res.json();
+          // Trigger file download in browser
+          const a = document.createElement("a");
+          a.href = payload.report_url;
+          a.download = payload.file_name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (err) {
+          alert("Error generating correction notice PDF: " + err.message);
+        } finally {
+          setGeneratingPDF(false);
+        }
       };
 
       // Export findings JSON
@@ -794,8 +800,9 @@
                       <button onClick={onOpenViewer} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 font-bold px-4 py-2.5 text-xs text-white transition shadow-sm">
                         <Icons.FileText size={14} /> Open Interactive Viewer
                       </button>
-                      <button onClick={handleDownloadNotice} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                        <Icons.Download size={14} /> Correction Notice
+                      <button onClick={handleDownloadNotice} disabled={generatingPDF} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm disabled:opacity-50">
+                        {generatingPDF ? <Icons.Loader2 size={14} /> : <Icons.Download size={14} />}
+                        {generatingPDF ? "Generating PDF..." : "Download Correction Notice PDF"}
                       </button>
                       <a href={pdfUrl} download className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
                         <Icons.Download size={14} /> Annotated PDF

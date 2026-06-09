@@ -86,3 +86,26 @@ async def review(
 def manifest(rid: str):
     p = os.path.join(REVIEWS, rid, "manifest.json")
     return JSONResponse(json.load(open(p))) if os.path.exists(p) else JSONResponse({"error": "not found"}, 404)
+
+
+@app.post("/api/reviews/{review_id}/generate-report")
+def generate_report(review_id: str):
+    p = os.path.join(REVIEWS, review_id, "review.json")
+    if not os.path.exists(p):
+        return JSONResponse({"error": "review not found"}, 404)
+    
+    with open(p) as fh:
+        review_data = json.load(fh)
+        
+    output_filename = f"OGPe_Correction_Notice_{review_id}.pdf"
+    output_path = os.path.join(REVIEWS, review_id, output_filename)
+    
+    from report_generator import generate_correction_notice_pdf
+    generate_correction_notice_pdf(review_data, output_path)
+    
+    report_url = f"/files/{review_id}/{output_filename}"
+    
+    return JSONResponse({
+        "report_url": report_url,
+        "file_name": output_filename
+    })
