@@ -1,0 +1,81 @@
+# OGPe AI Plan Review — testable build
+
+A first-pass permit-screening pipeline: a PDF drawing set is checked against a
+**pre-loaded Puerto Rico code set** by Claude, and the findings are **burned onto
+the PDF with PyMuPDF** and shown in an Apple-Preview-style viewer.
+
+```
+backend/
+  app.py             FastAPI: /api/code-sets, /api/review, /files/*
+  review_engine.py   builds the prompt from a code set + PDF text, calls Claude,
+                     parses findings (or returns bundled sample findings offline)
+  annotate.py        PyMuPDF: rectangles + ID label bubbles + sticky-note popups,
+                     renders per-page PNGs/thumbnails + manifest.json
+  make_sample.py     generates a sample "Modelo D" set + findings.json
+  codesets/          pre-loaded rule sets: prrc_2018, prbc_2018, unified_pr
+  sample/            modelo-d.pdf, findings.json
+  review_output/     example run output (annotated.pdf, page PNGs, manifest.json)
+ogpe-viewer-v2.jsx   front-end: code-set picker + Preview-style annotation viewer
+```
+
+## Run it
+
+```bash
+cd backend
+pip install -r requirements.txt
+
+# 1) regenerate the sample set (optional; already included)
+python make_sample.py
+
+# 2) prove the annotation pipeline (no API key needed)
+python annotate.py sample/modelo-d.pdf sample/findings.json review_output
+#    -> review_output/annotated.pdf  + page-NN.png + manifest.json
+
+# 3) run a full review (offline mock unless a key is set)
+python review_engine.py sample/modelo-d.pdf --code-set unified_pr --mock
+
+# 4) serve the API
+uvicorn app:app --reload
+#    GET  http://localhost:8000/api/code-sets
+#    POST http://localhost:8000/api/review   (multipart: file, code_set, language, ...)
+```
+
+## Live AI
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export OGPE_MODEL=claude-opus-4-8     # Opus 4.8, per request
+export OGPE_EFFORT=low                # low reasoning effort
+```
+
+Without a key, `run_review` returns the bundled sample findings so the front end,
+annotation, and viewer can be exercised end-to-end. Confirm the exact model
+string and the reasoning-effort parameter name against current Anthropic docs;
+`review_engine._call_anthropic` is the single place that talks to the API.
+
+## How the pieces connect
+
+- **Pre-loaded code sets.** `codesets/*.json` hold paraphrased rule summaries
+  (section + requirement + check hint). `unified_pr` merges PRRC + PRBC via
+  `includes`. The front-end selector and `/api/code-sets` read these.
+- **Review.** `build_prompt()` injects the selected rules + extracted page text
+  and asks Claude for a strict JSON findings array, including a 1-based `page`
+  and a normalized `bbox` so each finding can be placed on the drawing.
+- **Annotation (PyMuPDF).** `annotate.py` converts each `bbox` to page
+  coordinates and adds a location rectangle, a colored ID-label bubble, and a
+  sticky-note popup carrying the full evidence/correction. It then rasterizes
+  each page (marks baked in) for the thumbnail rail and focal view, and writes
+  `manifest.json` (which pages are annotated + marker coords).
+- **Readiness score.** Deterministic: `100 − (High×7 + Medium×3 + Low×1)`,
+  clamped at 0. Tune the weights in `review_engine.SEV_WEIGHT`.
+
+## Notes / honesty
+
+- The code sets are **authored rule summaries with section references**, not the
+  licensed IRC/PRBC text (ICC copyright). License the official code for
+  production and treat these as advisory screening rules.
+- The viewer's pages are stand-ins in the `.jsx` preview; in the deployed app the
+  thumbnails/focal images are the PyMuPDF-rendered PNGs from `/files/{id}/`.
+- This is a **first-pass screening aid**, not a substitute for a licensed
+  reviewer's determination.
+```

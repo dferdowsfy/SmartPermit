@@ -1,0 +1,63 @@
+{
+  "id": "prbc_2018",
+  "name": "PRBC 2018",
+  "based_on": "2018 IBC",
+  "rules": [
+    {
+      "id": "107",
+      "section": "PRBC 107 / CIAPR",
+      "default_severity": "High",
+      "requirement": "Construction documents must be signed and sealed by a Puerto Rico licensed professional engineer or architect.",
+      "check_hint": "Check title blocks for CIAPR seal and signature."
+    },
+    {
+      "id": "107.2",
+      "section": "PRBC 107.2",
+      "default_severity": "High",
+      "requirement": "Submit the complete architectural drawing set matching the drawing index.",
+      "check_hint": "Check index sheets against submitted drawings."
+    },
+    {
+      "id": "1609.2",
+      "section": "PRBC 1609.2",
+      "default_severity": "High",
+      "requirement": "Large fixed glazing in the windborne-debris region requires impact protection.",
+      "check_hint": "Verify windborne-debris protection details/shutters in coastal zones."
+    },
+    {
+      "id": "1613",
+      "section": "ASCE 7 / PRBC 1613",
+      "default_severity": "High",
+      "requirement": "Specify the seismic design category (SDC) based on Ss/S1 and soil class.",
+      "check_hint": "Verify structural notes for site coordinates, Ss, S1, and SDC."
+    },
+    {
+      "id": "1609",
+      "section": "PRBC 1609",
+      "default_severity": "Medium",
+      "requirement": "State the ultimate design wind speed (145-170 mph for Puerto Rico).",
+      "check_hint": "Check design parameters in structural notes."
+    },
+    {
+      "id": "amend",
+      "section": "PRBC amendment",
+      "default_severity": "Medium",
+      "requirement": "All exposed structural members and connections must be corrosion-resistant.",
+      "check_hint": "Check structural connection details for exposure classification."
+    },
+    {
+      "id": "IECC",
+      "section": "IECC 2018 1A",
+      "default_severity": "Medium",
+      "requirement": "Energy compliance must be modeled for Climate Zone 1A (hot-humid).",
+      "check_hint": "Verify insulation, SHGC values, and climate zone selection."
+    },
+    {
+      "id": "AppG",
+      "section": "PRBC App.G",
+      "default_severity": "Medium",
+      "requirement": "Provide FEMA flood zone determination and base flood elevation (BFE) for coastal parcels.",
+      "check_hint": "Check site/civil plan for flood zone information."
+    }
+  ]
+}

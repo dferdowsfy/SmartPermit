@@ -1,0 +1,29 @@
+{
+  "id": "unified_pr",
+  "name": "Unified Puerto Rico Code",
+  "based_on": "PRRC + PRBC, San Juan jurisdiction",
+  "includes": ["prrc_2018", "prbc_2018"],
+  "rules": [
+    {
+      "id": "QA_idx",
+      "section": "QA",
+      "default_severity": "Low",
+      "requirement": "Ensure sheet index matches submitted pages exactly.",
+      "check_hint": "Verify drawing list vs actual sheets."
+    },
+    {
+      "id": "QA_lbl",
+      "section": "QA",
+      "default_severity": "Low",
+      "requirement": "Label diagrammatic and illustrative views 'Not for Construction'.",
+      "check_hint": "Check detail sheets for construction labels."
+    },
+    {
+      "id": "QA_win",
+      "section": "QA",
+      "default_severity": "Low",
+      "requirement": "Verify window schedule has no numbering gaps or missing columns.",
+      "check_hint": "Check window schedules for completeness."
+    }
+  ]
+}

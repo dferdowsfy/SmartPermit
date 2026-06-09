@@ -1,0 +1,12 @@
+# Python Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Local review runs / output
+reviews/
+test_output/
+review_output/
+
+# OS files
+.DS_Store

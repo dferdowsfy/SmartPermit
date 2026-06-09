@@ -1,0 +1,42 @@
+{
+  "id": "prrc_2018",
+  "name": "PRRC 2018",
+  "based_on": "2018 IRC",
+  "rules": [
+    {
+      "id": "R310",
+      "section": "PRRC R310",
+      "default_severity": "High",
+      "requirement": "Each sleeping room must have an operable emergency escape and rescue opening (EERO).",
+      "check_hint": "Check bedroom window types (no fixed glass) and net clear opening dimensions."
+    },
+    {
+      "id": "R302.6",
+      "section": "IRC R302.6",
+      "default_severity": "Medium",
+      "requirement": "Garage/dwelling separation must use 5/8 inch Type X gypsum board or equivalent at the ceiling.",
+      "check_hint": "Check garage ceiling assembly specification."
+    },
+    {
+      "id": "R202",
+      "section": "PRRC R202",
+      "default_severity": "High",
+      "requirement": "State the dwelling-unit count clearly on construction documents.",
+      "check_hint": "Check index and project summary for unit count."
+    },
+    {
+      "id": "R312",
+      "section": "IRC R312",
+      "default_severity": "High",
+      "requirement": "Provide a guardrail detail for any drop exceeding 30 inches.",
+      "check_hint": "Verify balcony and stair edge guard details."
+    },
+    {
+      "id": "R311.7",
+      "section": "IRC R311.7",
+      "default_severity": "Medium",
+      "requirement": "Minimum stair width must be 36 inches.",
+      "check_hint": "Verify stair width annotations."
+    }
+  ]
+}

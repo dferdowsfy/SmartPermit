@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OGPe AI Plan Review — Gobierno de Puerto Rico</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            teal: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+              950: '#042f2e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased min-h-screen">
+  <div id="root"></div>
+
+  <!-- React Logic -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // SVG Icons
+    const Icons = {
+      Landmark: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <line x1="3" y1="22" x2="21" y2="22"></line>
+          <line x1="6" y1="18" x2="6" y2="11"></line>
+          <line x1="10" y1="18" x2="10" y2="11"></line>
+          <line x1="14" y1="18" x2="14" y2="11"></line>
+          <line x1="18" y1="18" x2="18" y2="11"></line>
+          <polygon points="12 2 20 7 4 7 12 2"></polygon>
+        </svg>
+      ),
+      Upload: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      ),
+      FileText: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      ),
+      LogOut: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      ),
+      ArrowLeft: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      ),
+      Download: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      ),
+      Check: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      ),
+      CheckCircle2: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      ),
+      AlertTriangle: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      ),
+      AlertCircle: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      ),
+      Info: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      ),
+      Loader2: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${props.className} animate-spin`} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <line x1="12" y1="2" x2="12" y2="6"></line>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          <line x1="2" y1="12" x2="6" y2="12"></line>
+          <line x1="18" y1="12" x2="22" y2="12"></line>
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+      ),
+      ClipboardList: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          <line x1="9" y1="14" x2="15" y2="14"></line>
+          <line x1="9" y1="18" x2="15" y2="18"></line>
+          <line x1="9" y1="10" x2="10" y2="10"></line>
+        </svg>
+      ),
+      ChevronLeft: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      ),
+      ChevronRight: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      ),
+      Lock: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      ),
+      Mail: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      ),
+      FileJson: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className} style={{ width: props.size || 24, height: props.size || 24 }}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <path d="M8 13h1v1.5a1.5 1.5 0 0 1-3 0v-.5"></path>
+          <path d="M12 11v4"></path>
+          <path d="M16 11.5v3a1.5 1.5 0 0 1-3 0v-3"></path>
+        </svg>
+      ),
+    };
+
+    const SEV_STYLE = {
+      High: { dot: "bg-red-600", border: "border-red-600", text: "text-red-700", bg: "bg-red-50", chip: "bg-red-50 text-red-700 border-red-200", icon: Icons.AlertTriangle },
+      Medium: { dot: "bg-amber-500", border: "border-amber-500", text: "text-amber-700", bg: "bg-amber-50", chip: "bg-amber-50 text-amber-700 border-amber-200", icon: Icons.AlertCircle },
+      Low: { dot: "bg-gray-400", border: "border-gray-400", text: "text-gray-600", bg: "bg-gray-50", chip: "bg-gray-100 text-gray-600 border-gray-300", icon: Icons.Info },
+    };
+
+    // Shared Header
+    function GovTopBar() {
+      return (
+        <div className="w-full bg-emerald-900 text-white text-xs select-none">
+          <div className="mx-auto max-w-7xl px-4 py-1.5 flex items-center justify-between">
+            <span className="tracking-wide font-medium">Gobierno de Puerto Rico</span>
+            <span className="text-emerald-200 font-mono text-[10px]">pr.gov</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Seal({ size = 40 }) {
+      return (
+        <div className="rounded-full border border-emerald-800/20 bg-emerald-50/50 flex items-center justify-center text-emerald-800 shrink-0" style={{ width: size, height: size }}>
+          <Icons.Landmark size={size * 0.5} />
+        </div>
+      );
+    }
+
+    function AppHeader({ right, left }) {
+      return (
+        <>
+          <GovTopBar />
+          <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm">
+            <div className="mx-auto max-w-7xl px-4 py-3.5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {left || (
+                  <>
+                    <Seal size={42} />
+                    <div className="leading-tight">
+                      <p className="text-sm font-bold text-emerald-800 tracking-wide">Oficina de Gerencia de Permisos</p>
+                      <p className="text-[11px] font-semibold text-teal-600/80">AI Plan Review Portal</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-4 text-sm font-medium">
+                {right}
+              </div>
+            </div>
+          </header>
+        </>
+      );
+    }
+
+    // Login Screen
+    function LoginScreen({ onLogin }) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+          <div>
+            <GovTopBar />
+            <header className="border-b border-gray-200 bg-white shadow-sm">
+              <div className="mx-auto max-w-6xl px-4 py-6 flex items-center gap-4">
+                <Seal size={56} />
+                <div>
+                  <h1 className="text-xl font-extrabold tracking-tight text-gray-900 leading-none">BUSINESS PORTAL</h1>
+                  <p className="text-xs font-semibold text-emerald-800 mt-1 uppercase tracking-wider">Oficina de Gerencia de Permisos</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Gobierno de Puerto Rico</p>
+                </div>
+              </div>
+            </header>
+            <div className="h-28 w-full bg-gradient-to-r from-emerald-800 to-teal-800 flex flex-col items-center justify-center px-4 text-center">
+              <span className="text-[10px] uppercase tracking-widest text-emerald-200 font-bold">Plan Review Pilot System</span>
+              <h2 className="text-white text-lg font-bold mt-1">Autonomous Code Compliance & Drawing Annotation Engine</h2>
+            </div>
+
+            <main className="bg-gray-50 flex-1 flex items-center justify-center px-4 py-10">
+              <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-md">
+                <h3 className="text-xl font-bold text-gray-900">Sign In</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Acceso al portal administrativo y solicitantes</p>
+
+                <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">E-mail / Correo Electrónico</label>
+                    <div className="relative mt-1.5">
+                      <Icons.Mail size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                      <input type="email" required defaultValue="rivera.c@ogpe.pr.gov" className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Password / Contraseña</label>
+                    <div className="relative mt-1.5">
+                      <Icons.Lock size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                      <input type="password" required defaultValue="••••••••" className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <a href="#" className="text-teal-700 hover:underline font-semibold">Forgot Password?</a>
+                    <a href="#" className="text-teal-700 hover:underline font-semibold">Register Account</a>
+                  </div>
+
+                  <button type="submit" className="w-full bg-teal-700 text-white hover:bg-teal-800 font-bold py-3 rounded-lg text-sm transition shadow-sm mt-6 flex items-center justify-center gap-2">
+                    <Icons.Lock size={14} /> Enter Portal / Ingresar
+                  </button>
+                </form>
+              </div>
+            </main>
+          </div>
+          <footer className="border-t border-gray-200 bg-white py-5 text-center text-xs text-gray-400">
+            <p className="font-semibold text-gray-500">Puerto Rico Permit Management Office (OGPe)</p>
+            <p className="mt-1">© 2026 Government of Puerto Rico. All rights reserved.</p>
+          </footer>
+        </div>
+      );
+    }
+
+    // Upload Screen
+    const LOADING_STEPS = [
+      ["Uploading documents", "Subiendo documentos del paquete"],
+      ["Reading drawing text and attributes", "Leyendo textos de planos y parámetros"],
+      ["Checking applicable Puerto Rico code sets", "Verificando códigos aplicables de PR"],
+      ["Generating code-compliance findings", "Generando hallazgos de cumplimiento de código"],
+      ["Creating annotated PDF drawings", "Baking anotaciones en dibujo PDF (PyMuPDF)"],
+      ["Preparing official correction notice", "Preparando notificación formal de correcciones"],
+    ];
+
+    function UploadScreen({ onRun, onLogout, codeSets }) {
+      const [projectName, setProjectName] = useState("Modelo D - Residencia");
+      const [municipality, setMunicipality] = useState("San Juan");
+      const [permitType, setPermitType] = useState("Construction");
+      const [projectType, setProjectType] = useState("Residential");
+      const [codeSetId, setCodeSetId] = useState("unified_pr");
+      const [language, setLanguage] = useState("English");
+      const [useMock, setUseMock] = useState(false);
+      const [file, setFile] = useState(null);
+      const [fileName, setFileName] = useState("");
+      
+      const [step, setStep] = useState(-1);
+      const fileInputRef = useRef(null);
+
+      const running = step >= 0;
+
+      useEffect(() => {
+        if (step < 0) return;
+        if (step >= LOADING_STEPS.length) {
+          return; // wait for API call to actually update the screen
+        }
+        const interval = setInterval(() => {
+          setStep((s) => s + 1);
+        }, 900);
+        return () => clearInterval(interval);
+      }, [step]);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setStep(0);
+
+        const formData = new FormData();
+        formData.append("project_name", projectName);
+        formData.append("municipality", municipality);
+        formData.append("permit_type", permitType);
+        formData.append("project_type", projectType);
+        formData.append("code_set", codeSetId);
+        formData.append("language", language);
+        formData.append("mock", useMock ? "true" : "false");
+        if (file) {
+          formData.append("file", file);
+        }
+
+        try {
+          const res = await fetch("/api/review", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            throw new Error("API request failed");
+          }
+          const data = await res.json();
+          // Finish the loader step anim instantly
+          setStep(LOADING_STEPS.length);
+          setTimeout(() => {
+            onRun(data);
+          }, 400);
+        } catch (err) {
+          alert("Error running plan review: " + err.message);
+          setStep(-1);
+        }
+      };
+
+      const handleDragOver = (e) => {
+        e.preventDefault();
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          const f = e.dataTransfer.files[0];
+          setFile(f);
+          setFileName(f.name);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col">
+            <AppHeader
+              right={
+                <>
+                  <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
+                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
+                    <Icons.LogOut size={15} /> Logout
+                  </button>
+                </>
+              }
+            />
+
+            <main className="mx-auto max-w-3xl w-full px-4 py-8 flex-1">
+              <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8 shadow-md transition">
+                <h2 className="text-2xl font-bold text-gray-900">Submit Plans for AI Review</h2>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Someter planos y especificaciones para revisión AI</p>
+                <p className="mt-4 text-sm leading-relaxed text-gray-600">
+                  Upload the design package PDF. The system will extract text, analyze it against the chosen Puerto Rico Code Set (such as the PRRC/PRBC), identify regulatory discrepancies, and generate interactive, annotated drawings.
+                </p>
+
+                <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Project Name</label>
+                      <input type="text" value={projectName} onChange={e => setProjectName(e.target.value)} required className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Municipality / Municipio</label>
+                      <input type="text" value={municipality} onChange={e => setMunicipality(e.target.value)} required className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Permit Type</label>
+                      <select value={permitType} onChange={e => setPermitType(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
+                        <option value="Construction">Construction Permit (Permiso de Construcción)</option>
+                        <option value="Use">Use Permit (Permiso de Uso)</option>
+                        <option value="Consolidated">Consolidated Permit (PCOC)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Project Type</label>
+                      <select value={projectType} onChange={e => setProjectType(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
+                        <option value="Residential">Residential (Residencial)</option>
+                        <option value="Commercial">Commercial (Comercial)</option>
+                        <option value="Mixed Use">Mixed Use (Uso Mixto)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Code set picker */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Code Set / Conjunto de Códigos</label>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Select the code guidelines to execute the audit engine against:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                      {codeSets.map(cs => (
+                        <button type="button" key={cs.id} onClick={() => setCodeSetId(cs.id)}
+                          className={`text-left rounded-xl border p-4 flex flex-col justify-between transition ${codeSetId === cs.id ? 'border-teal-700 ring-2 ring-teal-700 bg-teal-50/40' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-sm font-bold text-gray-900">{cs.name}</span>
+                            {codeSetId === cs.id && <Icons.Check size={16} className="text-teal-700" />}
+                          </div>
+                          <span className="text-xs text-gray-500 mt-1.5 leading-snug">{cs.id === 'prrc_2018' ? '2018 IRC + PR Amendments (Single-family residential design)' : cs.id === 'prbc_2018' ? '2018 IBC + PR Wind/Seismic (Commercial and large structures)' : 'Unified ruleset checking wind, structural and general layouts.'}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Audit Language / Idioma</label>
+                      <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
+                        <option value="English">English</option>
+                        <option value="Spanish">Español</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center mt-4 sm:mt-0 select-none">
+                      <input type="checkbox" id="mock-check" checked={useMock} onChange={e => setUseMock(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-700 focus:ring-teal-600" />
+                      <label htmlFor="mock-check" className="ml-2.5 block text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                        Use Mock Findings <span className="text-[10px] text-gray-400 font-semibold">(Offline / Rapid Demo)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Upload area */}
+                  <div className="pt-2">
+                    <span className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Permit Package PDF Drawings</span>
+                    <div
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      className="mt-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100/50 px-6 py-8 text-center transition cursor-pointer select-none relative"
+                      onClick={() => fileInputRef.current.click()}
+                    >
+                      <Icons.Upload className="mx-auto text-gray-400" size={32} />
+                      <p className="mt-3 text-sm font-semibold text-gray-700">Drag and drop drawing set PDF here</p>
+                      <p className="text-xs text-gray-400 mt-1">Arrastre o seleccione el archivo de planos en formato PDF</p>
+                      <button type="button" className="mt-4 rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition shadow-sm">
+                        Browse Files
+                      </button>
+                      <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
+                        onChange={(e) => { if (e.target.files?.[0]) { setFile(e.target.files[0]); setFileName(e.target.files[0].name); } }} />
+
+                      {fileName ? (
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-teal-50 border border-teal-200 px-3.5 py-1.5 text-xs text-teal-800 font-semibold">
+                          <Icons.FileText size={14} /> {fileName}
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-[11px] text-gray-400 font-semibold font-mono">Default: sample/modelo-d.pdf</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-3 flex flex-wrap items-center gap-3">
+                    <button type="submit" disabled={running} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-bold px-6 py-3.5 text-sm transition shadow">
+                      {running ? <Icons.Loader2 size={16} /> : <Icons.ClipboardList size={16} />}
+                      Run Plan Review AI
+                    </button>
+                    <button type="button" onClick={() => { setFile(null); setFileName(""); }} disabled={running} className="rounded-xl border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-bold px-6 py-3.5 text-sm transition shadow-sm">
+                      Clear Form
+                    </button>
+                    <span className="text-[11px] text-gray-400 font-semibold ml-auto">
+                      Engine: claude-opus-4-8 (low)
+                    </span>
+                  </div>
+                </form>
+
+                {/* Progress Loader steps */}
+                {running && (
+                  <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-inner transition">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Pipeline Execution Status</h4>
+                    <ul className="mt-4 space-y-3.5">
+                      {LOADING_STEPS.map(([en, es], i) => {
+                        const done = i < step;
+                        const active = i === step;
+                        return (
+                          <li key={en} className="flex items-center gap-3 text-xs">
+                            {done ? (
+                              <Icons.CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                            ) : active ? (
+                              <Icons.Loader2 size={18} className="text-teal-600 shrink-0" />
+                            ) : (
+                              <span className="h-4.5 w-4.5 rounded-full border border-gray-300 shrink-0 bg-white" />
+                            )}
+                            <span className={done ? "text-gray-500 font-medium" : active ? "text-teal-900 font-bold" : "text-gray-400"}>
+                              {en} <span className="text-gray-400 font-normal">/ {es}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+          <footer className="border-t border-gray-200 bg-white py-5 text-center text-xs text-gray-400">
+            <p className="font-semibold text-gray-500">Puerto Rico Permit Management Office (OGPe)</p>
+          </footer>
+        </div>
+      );
+    }
+
+    // Results Dashboard
+    function ResultsScreen({ data, onOpenViewer, onLogout, onBack }) {
+      const [selId, setSelId] = useState(data.findings[0]?.id || "");
+      const findings = data.findings;
+      const result = data.result;
+      const project = data.project;
+      const rid = data.review_id;
+
+      const sel = findings.find(f => f.id === selId) || findings[0];
+
+      // Download full PDF helper
+      const pdfUrl = `${data.files_base}/annotated.pdf`;
+
+      // Download correction notice report
+      const handleDownloadNotice = () => {
+        let txt = `GOVIERNO DE PUERTO RICO\nOFICINA DE GERENCIA DE PERMISOS\n\nAI PLAN REVIEW CORRECTION NOTICE\n--------------------------------------------\n`;
+        txt += `Project Name: ${project.name}\nMunicipality: ${project.municipality}\nPermit Type: ${project.permit_type}\n`;
+        txt += `Code Set: ${result.code_set_name}\nReadiness Score: ${result.readiness_score}/100\nStatus: ${result.status}\n\n`;
+        txt += `FINDINGS SUMMARY (${findings.length} findings):\n`;
+        findings.forEach(f => {
+          txt += `\n[${f.id}] [${f.severity}] Code: ${f.code} (Sheet: ${f.sheet || 'N/A'})\n`;
+          txt += `Title: ${f.title}\n`;
+          txt += `Evidence: ${f.evidence}\n`;
+          txt += `Correction: ${f.correction}\n`;
+        });
+        const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `correction-notice-${rid}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // Export findings JSON
+      const handleExportJSON = () => {
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `findings-${rid}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const isReady = result.readiness_score >= 70;
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col">
+            <AppHeader
+              left={
+                <button onClick={onBack} className="inline-flex items-center gap-2 text-teal-700 hover:text-teal-900 font-bold transition">
+                  <Icons.ArrowLeft size={16} /> New Submission
+                </button>
+              }
+              right={
+                <>
+                  <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
+                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
+                    <Icons.LogOut size={15} /> Logout
+                  </button>
+                </>
+              }
+            />
+
+            <main className="mx-auto max-w-7xl w-full px-4 py-6 flex-1 flex flex-col gap-6">
+              {/* Metadata Card */}
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <dl className="grid grid-cols-2 md:grid-cols-4 gap-6 flex-1">
+                    <div>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Project Name</dt>
+                      <dd className="text-sm font-bold text-gray-900 mt-1 leading-snug">{project.name}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Permit Type / Municipio</dt>
+                      <dd className="text-sm font-medium text-gray-700 mt-1">{project.permit_type} \u00b7 {project.municipality}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Applied Code Set</dt>
+                      <dd className="text-sm font-semibold text-gray-700 mt-1">{result.code_set_name}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Compliance Status</dt>
+                      <dd className="mt-1">
+                        <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-xs font-bold ${isReady ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                          {isReady ? <Icons.CheckCircle2 size={12} /> : <Icons.AlertTriangle size={12} />}
+                          {result.status}
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {/* Readiness circular gauge */}
+                  <div className="lg:w-60 bg-gray-50 rounded-xl border border-gray-200 p-4 shrink-0 flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Readiness Score</span>
+                    <p className={`mt-1.5 text-4xl font-extrabold ${isReady ? 'text-emerald-700' : 'text-red-700'}`}>
+                      {result.readiness_score}
+                      <span className="text-lg text-gray-400 font-semibold"> / 100</span>
+                    </p>
+                    <div className="mt-3.5 h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                      <div className={`h-full transition-all duration-1000 ${isReady ? 'bg-emerald-600' : 'bg-red-600'}`} style={{ width: `${result.readiness_score}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Severity cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {Object.entries(result.counts).map(([sev, count]) => {
+                  const s = SEV_STYLE[sev];
+                  return (
+                    <div key={sev} className="rounded-xl border border-gray-200 bg-white p-5 flex items-center gap-4 shadow-sm">
+                      <div className={`p-3 rounded-lg ${s.bg} ${s.text}`}>
+                        <s.icon size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{sev} Severity</span>
+                        <p className="text-2xl font-bold text-gray-900 mt-0.5">{count}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 items-stretch">
+                {/* Findings list */}
+                <div className="rounded-xl border border-gray-200 bg-white shadow-md flex flex-col min-h-[480px]">
+                  <div className="border-b border-gray-200 px-5 py-4">
+                    <h3 className="text-sm font-bold text-gray-900">Correction Findings</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Discrepancies matching selected rules ({findings.length} findings)</p>
+                  </div>
+                  <ul className="divide-y divide-gray-100 flex-1 overflow-auto max-h-[500px]">
+                    {findings.map((f) => (
+                      <li key={f.id}>
+                        <button
+                          onClick={() => setSelId(f.id)}
+                          className={`w-full text-left px-5 py-3 flex items-start gap-4 hover:bg-gray-50/50 transition ${selId === f.id ? "bg-teal-50/40 border-l-4 border-teal-700" : "border-l-4 border-transparent"}`}
+                        >
+                          <span className="mt-1 font-mono text-xs font-bold text-gray-400 w-12 shrink-0">{f.id}</span>
+                          <span className="flex-1 min-w-0">
+                            <span className="flex items-center gap-2">
+                              <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold ${SEV_STYLE[f.severity].chip}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[f.severity].dot}`} />
+                                {f.severity}
+                              </span>
+                              <span className="text-xs font-bold text-gray-900 truncate">{f.title}</span>
+                            </span>
+                            <span className="mt-1 block text-[11px] text-gray-400 font-semibold leading-none">
+                              Sheet: {f.sheet || "N/A"} \u00b7 Code: {f.code}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Selected Detail Panel */}
+                {sel && (
+                  <div className="rounded-xl border border-gray-200 bg-white shadow-md flex flex-col justify-between">
+                    <div>
+                      <div className="border-b border-gray-200 px-5 py-4 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-gray-900">Finding Details</h3>
+                        <span className="font-mono text-xs font-bold text-teal-700">{sel.id}</span>
+                      </div>
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-bold ${SEV_STYLE[sel.severity].chip}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[sel.severity].dot}`} />
+                            {sel.severity}
+                          </span>
+                          <h4 className="text-base font-bold text-gray-900">{sel.title}</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sheet / Plano</dt>
+                            <dd className="text-xs font-semibold text-gray-700 mt-1">{sel.sheet || "N/A"}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Code Section</dt>
+                            <dd className="text-xs font-mono font-bold text-teal-700 mt-1">{sel.code}</dd>
+                          </div>
+                        </div>
+                        <div className="border-t border-gray-100 pt-3">
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Evidence / Evidencia hallada</dt>
+                          <dd className="text-xs text-gray-700 mt-1 leading-relaxed bg-gray-50 border border-gray-100 p-2.5 rounded-lg">{sel.evidence}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Requirement Explanation</dt>
+                          <dd className="text-xs text-gray-600 mt-1 leading-relaxed">{sel.explanation}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Correction / Acción correctiva</dt>
+                          <dd className="text-xs text-emerald-800 font-medium mt-1 leading-relaxed bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-lg">{sel.correction}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Model Confidence</dt>
+                          <div className="flex items-center gap-3.5 mt-1">
+                            <div className="h-1.5 w-full max-w-sm rounded-full bg-gray-100 overflow-hidden border border-gray-200/50">
+                              <div className="h-full bg-emerald-600" style={{ width: `${Math.round(sel.confidence * 100)}%` }} />
+                            </div>
+                            <span className="text-xs font-mono font-bold text-emerald-700">{Math.round(sel.confidence * 100)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 p-5 flex flex-wrap gap-2 bg-gray-50 rounded-b-xl">
+                      <button onClick={onOpenViewer} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 font-bold px-4 py-2.5 text-xs text-white transition shadow-sm">
+                        <Icons.FileText size={14} /> Open Interactive Viewer
+                      </button>
+                      <button onClick={handleDownloadNotice} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                        <Icons.Download size={14} /> Correction Notice
+                      </button>
+                      <a href={pdfUrl} download className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                        <Icons.Download size={14} /> Annotated PDF
+                      </a>
+                      <button onClick={handleExportJSON} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
+                        <Icons.FileJson size={14} /> JSON
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // Interactive Viewer Screen
+    function ViewerScreen({ data, onBack }) {
+      const rid = data.review_id;
+      const findings = data.findings;
+      const manifest = data.manifest;
+      const filesBase = data.files_base;
+
+      const [pageNo, setPageNo] = useState(1);
+      const [activeId, setActiveId] = useState(findings[0]?.id || "");
+      const [hoveredId, setHoveredId] = useState(null);
+
+      const currentPageManifest = manifest.pages.find(p => p.page === pageNo) || manifest.pages[0];
+      const pageMarkers = currentPageManifest.markers || [];
+      const pageImage = `${filesBase}/${currentPageManifest.image}`;
+      
+      const sel = findings.find(f => f.id === activeId) || findings[0];
+
+      // Handle synchronizing click on marker
+      const handleMarkerClick = (fid) => {
+        setActiveId(fid);
+      };
+
+      // Select page and synchronize active finding
+      const selectPage = (p) => {
+        setPageNo(p);
+        const pManifest = manifest.pages.find(pm => pm.page === p);
+        if (pManifest && pManifest.markers && pManifest.markers.length > 0) {
+          setActiveId(pManifest.markers[0].id);
+        }
+      };
+
+      // Handle selecting findings from list/sidebar
+      const selectFinding = (f) => {
+        setActiveId(f.id);
+        if (f.page && f.page !== pageNo) {
+          setPageNo(f.page);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-100 flex flex-col justify-between">
+          <div className="flex flex-col flex-1">
+            <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm flex items-center justify-between px-4 py-3 select-none">
+              <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-900 transition">
+                <Icons.ArrowLeft size={16} /> Back to Dashboard
+              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{data.project.name} \u00b7 {findings.length} findings total</span>
+                <a href={`${filesBase}/annotated.pdf`} download className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 px-4 py-2 text-xs font-bold text-white transition shadow-sm">
+                  <Icons.Download size={14} /> Download PDF
+                </a>
+              </div>
+            </header>
+
+            <main className="flex-1 grid grid-cols-1 lg:grid-cols-[140px_1fr_320px] items-stretch gap-4 p-4">
+              {/* Left sidebar: page thumbnail rail */}
+              <div className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col gap-3 self-start max-h-[calc(100vh-100px)] overflow-y-auto shadow-md select-none">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-1.5">Drawings</p>
+                <ul className="space-y-2.5">
+                  {manifest.pages.map((p) => {
+                    const thumbUrl = `${filesBase}/${p.thumb}`;
+                    const findingsCount = findings.filter(f => f.page === p.page).length;
+                    const hasHigh = findings.some(f => f.page === p.page && f.severity === "High");
+
+                    return (
+                      <li key={p.page}>
+                        <button
+                          onClick={() => selectPage(p.page)}
+                          className={`relative block w-full rounded-lg border p-1 transition overflow-hidden ${pageNo === p.page ? 'border-teal-700 ring-2 ring-teal-700 bg-teal-50/10' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                        >
+                          <div className="relative bg-gray-50 border border-gray-100 rounded" style={{ aspectRatio: "11/8.5" }}>
+                            <img src={thumbUrl} className="w-full h-full object-contain pointer-events-none" />
+                            {findingsCount > 0 && (
+                              <span className={`absolute -top-1 -left-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow-sm border border-white ${hasHigh ? 'bg-red-600' : 'bg-amber-500'}`}>
+                                {findingsCount}
+                              </span>
+                            )}
+                          </div>
+                          <span className="mt-1 block text-center text-[10px] font-bold text-gray-500 font-mono leading-none">p{p.page} ({p.label})</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {/* Center panel: Focal Page Image with overlay SVG/DOM markers */}
+              <div className="rounded-xl border border-gray-200 bg-gray-200 p-4 shadow-inner flex flex-col justify-between items-stretch gap-3 min-h-[500px]">
+                <div className="flex items-center justify-between select-none">
+                  <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-300/40 text-xs font-semibold">
+                    <button onClick={() => selectPage(Math.max(1, pageNo - 1))} className="text-gray-500 hover:text-teal-700 transition"><Icons.ChevronLeft size={16} /></button>
+                    <span className="text-gray-800 font-bold px-1.5 font-mono">{currentPageManifest.label} \u2014 {currentPageManifest.label === 'Page 1' ? 'General Layout & Details' : 'Details & Layout Plan'}</span>
+                    <button onClick={() => selectPage(Math.min(manifest.page_count, pageNo + 1))} className="text-gray-500 hover:text-teal-700 transition"><Icons.ChevronRight size={16} /></button>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-500 bg-white/75 border px-2.5 py-1 rounded-lg font-mono leading-none">
+                    {pageMarkers.length} marker{pageMarkers.length !== 1 ? 's' : ''} on sheet
+                  </span>
+                </div>
+
+                {/* Target Focal Drawing Box */}
+                <div className="relative mx-auto max-w-4xl w-full bg-white shadow-lg border border-gray-300 rounded-lg overflow-hidden flex items-center justify-center select-none" style={{ aspectRatio: "11/8.5" }}>
+                  <img src={pageImage} className="w-full h-full object-contain pointer-events-none" />
+
+                  {/* Absolute positioned markers */}
+                  {pageMarkers.map((m) => {
+                    const [x0, y0, x1, y1] = m.bbox;
+                    const active = m.id === activeId;
+                    const hovered = m.id === hoveredId;
+                    const s = SEV_STYLE[m.severity] || SEV_STYLE.Medium;
+                    
+                    return (
+                      <div
+                        key={m.id}
+                        className="absolute cursor-pointer select-none"
+                        style={{
+                          left: `${x0 * 100}%`,
+                          top: `${y0 * 100}%`,
+                          width: `${(x1 - x0) * 100}%`,
+                          height: `${(y1 - y0) * 100}%`,
+                        }}
+                        onClick={() => handleMarkerClick(m.id)}
+                        onMouseEnter={() => setHoveredId(m.id)}
+                        onMouseLeave={() => setHoveredId(null)}
+                      >
+                        {/* Interactive Highlight Border */}
+                        <div className={`absolute inset-0 border-2 rounded transition-all ${active ? 'border-teal-600 ring-2 ring-teal-600/30' : hovered ? 'border-teal-500/80' : s.border}`} style={{ backgroundColor: active ? 'rgba(13, 148, 136, 0.08)' : hovered ? 'rgba(13, 148, 136, 0.03)' : 'transparent' }} />
+                        
+                        {/* ID Tag bubble */}
+                        <button
+                          className={`absolute -top-3.5 left-0 shadow-sm border border-white font-mono font-bold text-[9px] text-white px-1.5 py-0.5 rounded leading-none transition-all ${active ? 'bg-teal-700 ring-2 ring-teal-600/30 scale-105' : s.dot}`}
+                        >
+                          {m.id}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right sidebar: finding details and navigations */}
+              <div className="flex flex-col gap-4 self-stretch max-h-[calc(100vh-100px)] overflow-y-auto min-w-[300px]">
+                {/* Active Annotation Detail Card */}
+                {sel && (
+                  <div className="rounded-xl border border-gray-200 bg-white shadow-md">
+                    <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between select-none">
+                      <span className="text-xs font-bold text-gray-900">Annotation Details</span>
+                      <span className="font-mono text-xs font-bold text-teal-700">{sel.id}</span>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold ${SEV_STYLE[sel.severity].chip}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[sel.severity].dot}`} />
+                          {sel.severity}
+                        </span>
+                        <h4 className="text-xs font-bold text-gray-900 leading-snug">{sel.title}</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold border-b border-gray-100 pb-2">
+                        <div>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Sheet / Page</dt>
+                          <dd className="text-gray-700 mt-0.5">p{sel.page} \u00b7 {sel.sheet || 'N/A'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Rule Code</dt>
+                          <dd className="text-teal-700 font-mono mt-0.5">{sel.code}</dd>
+                        </div>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Evidence</dt>
+                        <dd className="text-xs text-gray-700 mt-1 leading-relaxed bg-gray-50 border p-2 rounded-lg">{sel.evidence}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Required Correction</dt>
+                        <dd className="text-xs text-emerald-800 font-medium mt-1 leading-relaxed bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-lg">{sel.correction}</dd>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* All findings shortcuts */}
+                <div className="rounded-xl border border-gray-200 bg-white shadow-md flex-1 flex flex-col min-h-[200px]">
+                  <div className="border-b border-gray-200 px-4 py-3 select-none">
+                    <span className="text-xs font-bold text-gray-900">All Project Findings ({findings.length})</span>
+                  </div>
+                  <ul className="divide-y divide-gray-100 overflow-y-auto flex-1 max-h-[300px]">
+                    {findings.map((f) => (
+                      <li key={f.id}>
+                        <button
+                          onClick={() => selectFinding(f)}
+                          className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50/50 transition ${activeId === f.id ? "bg-teal-50/30 font-bold border-l-4 border-teal-700" : "border-l-4 border-transparent"}`}
+                        >
+                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${SEV_STYLE[f.severity].dot}`} />
+                          <span className="font-mono text-xs text-gray-400 w-12 shrink-0">{f.id}</span>
+                          <span className="text-xs text-gray-700 truncate flex-1">{f.title}</span>
+                          <span className="text-[10px] text-gray-400 font-bold font-mono">p{f.page}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // App Wrapper
+    function App() {
+      const [screen, setScreen] = useState("login");
+      const [codeSets, setCodeSets] = useState([
+        { id: "prrc_2018", name: "PRRC 2018" },
+        { id: "prbc_2018", name: "PRBC 2018" },
+        { id: "unified_pr", name: "Unified Puerto Rico Code" }
+      ]);
+      const [reviewData, setReviewData] = useState(null);
+
+      // Fetch code sets from API on mount
+      useEffect(() => {
+        const fetchCodeSets = async () => {
+          try {
+            const res = await fetch("/api/code-sets");
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.length > 0) {
+                setCodeSets(data);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to load code sets", err);
+          }
+        };
+        fetchCodeSets();
+      }, []);
+
+      const handleLogin = () => {
+        setScreen("upload");
+      };
+
+      const handleRun = (data) => {
+        setReviewData(data);
+        setScreen("results");
+      };
+
+      return (
+        <div>
+          {/* Developer screen override sidebar for rapid previewing */}
+          <div className="fixed bottom-3 right-3 z-50 flex gap-1 rounded-lg border border-gray-300 bg-white/95 p-1 text-[11px] shadow-md select-none">
+            {["login", "upload", "results", "viewer"].map((s) => (
+              <button
+                key={s}
+                onClick={() => {
+                  if (s === "results" && !reviewData) {
+                    alert("Please submit plan review from upload screen first!");
+                    return;
+                  }
+                  if (s === "viewer" && !reviewData) {
+                    alert("Please submit plan review from upload screen first!");
+                    return;
+                  }
+                  setScreen(s);
+                }}
+                className={`rounded px-2.5 py-1 font-bold capitalize transition ${screen === s ? "bg-teal-700 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {screen === "login" && <LoginScreen onLogin={handleLogin} />}
+          {screen === "upload" && <UploadScreen onRun={handleRun} onLogout={() => setScreen("login")} codeSets={codeSets} />}
+          {screen === "results" && <ResultsScreen data={reviewData} onOpenViewer={() => setScreen("viewer")} onLogout={() => setScreen("login")} onBack={() => setScreen("upload")} />}
+          {screen === "viewer" && <ViewerScreen data={reviewData} onBack={() => setScreen("results")} />}
+        </div>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
