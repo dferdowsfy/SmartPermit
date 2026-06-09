@@ -16,7 +16,18 @@ import fitz
 HERE = os.path.dirname(__file__)
 CODESETS_DIR = os.path.join(HERE, "codesets")
 
-DEFAULT_MODEL = os.environ.get("OGPE_MODEL", "claude-opus-4-8")
+# Load environment variables from .env if present
+try:
+    with open(os.path.join(HERE, ".env")) as f:
+        for line in f:
+            line = line.strip()
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+except Exception:
+    pass
+
+DEFAULT_MODEL = os.environ.get("OGPE_MODEL", "anthropic/claude-opus-4.8")
 # "low" reasoning effort, per request. The engine passes this through; adjust to
 # the current API parameter name/values per Anthropic docs.
 DEFAULT_EFFORT = os.environ.get("OGPE_EFFORT", "low")
@@ -92,6 +103,32 @@ Drawing text by page:
 """
 
 
+def _call_openrouter(prompt: str, model: str, effort: str) -> str:
+    import urllib.request
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise ValueError("Missing API Key (OPENROUTER_API_KEY or ANTHROPIC_API_KEY)")
+
+    body = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    # Some OpenRouter models support reasoning effort or pass-through configurations
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps(body).encode(),
+        headers={
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "OGPe AI Plan Review"
+        },
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read())
+    return data["choices"][0]["message"]["content"]
+
+
 def _call_anthropic(prompt: str, model: str, effort: str) -> str:
     import urllib.request
     key = os.environ["ANTHROPIC_API_KEY"]
@@ -115,6 +152,14 @@ def _call_anthropic(prompt: str, model: str, effort: str) -> str:
     return "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
 
 
+def _call_llm_api(prompt: str, model: str, effort: str) -> str:
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("ANTHROPIC_API_KEY") or ""
+    if key.startswith("sk-or-") or os.environ.get("OPENROUTER_API_KEY"):
+        return _call_openrouter(prompt, model, effort)
+    else:
+        return _call_anthropic(prompt, model, effort)
+
+
 def _parse_findings(raw: str) -> list[dict]:
     raw = raw.strip()
     raw = re.sub(r"^```(json)?|```$", "", raw, flags=re.MULTILINE).strip()
@@ -131,12 +176,13 @@ def run_review(pdf_path: str, code_set_id: str, language: str = "English",
                model: str = DEFAULT_MODEL, effort: str = DEFAULT_EFFORT,
                mock: bool = False) -> dict:
     code_set = load_code_set(code_set_id)
-    if mock or not os.environ.get("ANTHROPIC_API_KEY"):
+    has_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    if mock or not has_key:
         findings = json.load(open(os.path.join(HERE, "sample", "findings.json")))
         source = "mock (bundled sample findings)"
     else:
         pages = extract_pages(pdf_path)
-        raw = _call_anthropic(build_prompt(code_set, pages, language), model, effort)
+        raw = _call_llm_api(build_prompt(code_set, pages, language), model, effort)
         findings = _parse_findings(raw)
         source = f"{model} (effort={effort})"
     counts = {s: sum(1 for f in findings if f.get("severity") == s) for s in ("High", "Medium", "Low")}

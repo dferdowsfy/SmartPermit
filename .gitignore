@@ -10,3 +10,6 @@ review_output/
 
 # OS files
 .DS_Store
+
+# Local secrets
+.env
