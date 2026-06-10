@@ -76,9 +76,17 @@ def build_prompt(code_set: dict, pages: list[dict], language: str) -> str:
     return f"""You are an OGPe plan-review assistant performing a conservative FIRST-PASS
 screening of a permit drawing set against the "{code_set['name']}" rule set.
 
-CRITICAL REQUIREMENT: This screening must be 100% deterministic, consistent, and repeatable. The same drawing text inputs must always yield the exact same findings, scores, severity classifications, and bounding boxes. Perform your analysis objectively and deterministically, with zero creativity or variation.
+DETERMINISM RULES (MANDATORY — follow exactly):
+1. Evaluate every rule in the exact order listed below. Do NOT skip or reorder.
+2. For each rule, check every page in ascending order (page 1, 2, 3...).
+3. If a rule is violated or unverifiable, emit exactly ONE finding per rule.
+4. Assign IDs sequentially: HF-01, HF-02... for High; MF-01, MF-02... for Medium; LF-01, LF-02... for Low. Number them in the order they appear.
+5. Set confidence to exactly 0.9 for High severity, 0.7 for Medium, 0.5 for Low.
+6. Round ALL bbox coordinates to exactly 2 decimal places.
+7. Do NOT use synonyms, rephrase, or vary wording between runs. Use the exact same phrasing every time for the same input.
+8. Do NOT add any randomness, creativity, or variation. This must be 100% deterministic.
 
-Rules to screen against:
+Rules to screen against (evaluate in this exact order):
 {rules}
 
 For each rule that the drawing text appears to violate or leave unverifiable,
@@ -86,18 +94,18 @@ emit ONE finding. Be conservative: if the documents don't contain enough
 evidence to confirm compliance, raise the finding as "not verifiable" rather
 than asserting a pass. Do not invent content that is not supported by the text.
 
-Return ONLY a JSON array (no prose, no markdown) where each item has:
+Return ONLY a JSON array (no prose, no markdown fences) where each item has:
   id           short code like "HF-01" (High), "MF-01" (Medium), "LF-01" (Low)
   severity     "High" | "Medium" | "Low"
-  title        short finding title
-  page         1-based page number where the evidence appears
-  bbox         normalized [x0,y0,x1,y1] (0..1) locating the evidence on that page
+  title        short finding title (use identical wording for identical violations)
+  page         1-based page number where the evidence appears (use lowest page number)
+  bbox         normalized [x0,y0,x1,y1] (0..1) rounded to 2 decimals
   sheet        sheet id if visible (e.g. "A-101"), else ""
   code         the rule's section reference
-  evidence     evidence directly from the drawing text (do not quote at length)
+  evidence     verbatim text from the drawing (do not paraphrase)
   explanation  one sentence on the requirement
   correction   one sentence on the required correction
-  confidence   0..1
+  confidence   exactly 0.9 (High), 0.7 (Medium), or 0.5 (Low)
 Write evidence/explanation/correction in {lang}.
 
 Drawing text by page:
@@ -115,6 +123,12 @@ def _call_openrouter(prompt: str, model: str, effort: str) -> str:
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.0,
+        "top_p": 1.0,
+        "seed": 42,
+        "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": False,
+        },
     }
     # Some OpenRouter models support reasoning effort or pass-through configurations
     req = urllib.request.Request(
@@ -140,6 +154,7 @@ def _call_anthropic(prompt: str, model: str, effort: str) -> str:
         "max_tokens": 4000,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.0,
+        "top_p": 1.0,
     }
     # pass reasoning effort if supported by the account/model; harmless extra key
     # is ignored by older endpoints behind a try/except on the caller side.
