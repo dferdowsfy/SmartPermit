@@ -1,13 +1,13 @@
 # OGPe AI Plan Review — testable build
 
 A first-pass permit-screening pipeline: a PDF drawing set is checked against a
-**pre-loaded Puerto Rico code set** by Claude, and the findings are **burned onto
+**pre-loaded Puerto Rico code set** by an LLM (Grok 4.20 via OpenRouter), and the findings are **burned onto
 the PDF with PyMuPDF** and shown in an Apple-Preview-style viewer.
 
 ```
 backend/
   app.py             FastAPI: /api/code-sets, /api/review, /files/*
-  review_engine.py   builds the prompt from a code set + PDF text, calls Claude,
+  review_engine.py   builds the prompt from a code set + PDF text, calls the LLM,
                      parses findings (or returns bundled sample findings offline)
   annotate.py        PyMuPDF: rectangles + ID label bubbles + sticky-note popups,
                      renders per-page PNGs/thumbnails + manifest.json
@@ -62,15 +62,15 @@ Useful endpoints:
 ## Live AI
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-export OGPE_MODEL=claude-opus-4-8     # Opus 4.8, per request
+export OPENROUTER_API_KEY=sk-or-...
+export OGPE_MODEL=x-ai/grok-4.20      # Grok 4.20 via OpenRouter
 export OGPE_EFFORT=low                # low reasoning effort
 ```
 
 Without a key, `run_review` returns the bundled sample findings so the front end,
 annotation, and viewer can be exercised end-to-end. Confirm the exact model
-string and the reasoning-effort parameter name against current Anthropic docs;
-`review_engine._call_anthropic` is the single place that talks to the API.
+string against OpenRouter docs;
+`review_engine._call_openrouter` is the single place that talks to the API.
 
 ## How the pieces connect
 
@@ -78,7 +78,7 @@ string and the reasoning-effort parameter name against current Anthropic docs;
   (section + requirement + check hint). `unified_pr` merges PRRC + PRBC via
   `includes`. The front-end selector and `/api/code-sets` read these.
 - **Review.** `build_prompt()` injects the selected rules + extracted page text
-  and asks Claude for a strict JSON findings array, including a 1-based `page`
+  and asks the LLM for a strict JSON findings array, including a 1-based `page`
   and a normalized `bbox` so each finding can be placed on the drawing.
 - **Annotation (PyMuPDF).** `annotate.py` converts each `bbox` to page
   coordinates and adds a location rectangle, a colored ID-label bubble, and a

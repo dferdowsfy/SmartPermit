@@ -65,6 +65,7 @@ def _save_review(review_id: str, payload: dict) -> None:
 app = FastAPI(title="OGPe AI Plan Review")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/files", StaticFiles(directory=REVIEWS), name="files")
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 @app.get("/")
@@ -138,7 +139,7 @@ def manifest(rid: str):
 
 
 @app.post("/api/reviews/{review_id}/generate-report")
-def generate_report(review_id: str):
+def generate_report(review_id: str, lang: str = "en"):
     try:
         review_data = _load_review(review_id)
         rdir = _review_dir(review_id)
@@ -147,17 +148,48 @@ def generate_report(review_id: str):
     if review_data is None:
         return JSONResponse({"error": "review not found"}, 404)
 
-    output_filename = f"OGPe_Correction_Notice_{review_id}.pdf"
+    if lang == "es":
+        output_filename = f"OGPe_Notificacion_Correcciones_{review_id}.pdf"
+    else:
+        output_filename = f"OGPe_Correction_Notice_{review_id}.pdf"
     output_path = os.path.join(rdir, output_filename)
 
     from report_generator import generate_correction_notice_pdf
-    generate_correction_notice_pdf(review_data, output_path)
-
+    generate_correction_notice_pdf(review_data, output_path, lang)
     report_url = f"/files/{review_id}/{output_filename}"
 
     return JSONResponse({
         "report_url": report_url,
         "file_name": output_filename,
+    })
+
+
+@app.post("/api/reviews/{review_id}/generate-annotated-pdf")
+def generate_annotated_pdf(review_id: str, lang: str = "en"):
+    p = os.path.join(REVIEWS, review_id, "review.json")
+    if not os.path.exists(p):
+        return JSONResponse({"error": "review not found"}, 404)
+    
+    with open(p) as fh:
+        review_data = json.load(fh)
+        
+    src = os.path.join(REVIEWS, review_id, "source.pdf")
+    
+    if lang == "es":
+        from report_generator import translate_finding
+        translated_findings = [translate_finding(f, "es") for f in review_data.get("findings", [])]
+        output_filename = f"planos_anotados_{review_id}.pdf"
+    else:
+        translated_findings = review_data.get("findings", [])
+        output_filename = f"annotated_plans_{review_id}.pdf"
+        
+    out_dir = os.path.join(REVIEWS, review_id)
+    annotate_pdf(src, translated_findings, out_dir, render_images=False, filename=output_filename)
+    
+    report_url = f"/files/{review_id}/{output_filename}"
+    return JSONResponse({
+        "report_url": report_url,
+        "file_name": output_filename
     })
 
 

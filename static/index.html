@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OGPe AI Plan Review — Gobierno de Puerto Rico</title>
+  <title>OGPe AI Plan Review</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React & Babel CDN -->
@@ -19,27 +22,42 @@
     body {
       font-family: 'Outfit', sans-serif;
     }
+
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
     }
+
     /* Custom Scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
+
     ::-webkit-scrollbar-track {
       background: #f1f5f9;
     }
+
     ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 4px;
     }
+
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+
     @keyframes pinPulse {
-      0%, 100% { opacity: 0.35; transform: scale(2); }
-      50% { opacity: 0.08; transform: scale(2.7); }
+
+      0%,
+      100% {
+        opacity: 0.35;
+        transform: scale(2);
+      }
+
+      50% {
+        opacity: 0.08;
+        transform: scale(2.7);
+      }
     }
   </style>
   <script>
@@ -79,6 +97,7 @@
     }
   </script>
 </head>
+
 <body class="bg-gray-50 text-gray-900 antialiased min-h-screen">
   <div id="root"></div>
 
@@ -226,113 +245,319 @@
       Low: { dot: "bg-gray-400", border: "border-gray-400", text: "text-gray-600", bg: "bg-gray-50", chip: "bg-gray-100 text-gray-600 border-gray-300", icon: Icons.Info },
     };
 
-    // Shared Header
-    function GovTopBar() {
+    // Shared Header (GovTopBar removed)
+
+    const TRANSLATIONS = {
+      en: {
+        newReview: "New Review",
+        results: "Results",
+        viewer: "Viewer",
+        history: "History",
+        submitPlans: "Submit Plans for AI Review",
+        submitPlansSub: "Upload the design package PDF. The system will extract text, analyze it against the chosen Puerto Rico Code Set (such as the PRRC/PRBC), identify regulatory discrepancies, and generate interactive, annotated drawings.",
+        projectName: "Project Name",
+        municipality: "Municipality",
+        permitType: "Permit Type",
+        projectType: "Project Type",
+        codeSet: "Code Set",
+        codeSetSub: "Select the code guidelines to execute the audit engine against:",
+        auditLanguage: "Audit Language",
+        useMock: "Use Mock Findings",
+        useMockSub: "(Offline / Rapid Demo)",
+        dragDropPdf: "Drag and drop drawing set PDF here",
+        dragDropSub: "or click to browse files",
+        browseFiles: "Browse Files",
+        runPlanReview: "Run Plan Review AI",
+        clearForm: "Clear Form",
+        auditPipelineStatus: "AI Pipeline Execution Status",
+        resultsDashboard: "Plan Review Results Dashboard",
+        discrepanciesCount: "Discrepancies matching selected rules",
+        findingDetails: "Finding Details",
+        activeAnnotationDetails: "Annotation Details",
+        evidenceLabel: "Evidence",
+        explanationLabel: "Requirement Explanation",
+        correctionLabel: "Required Correction",
+        confidenceLabel: "Model Confidence",
+        downloadNoticePdf: "Notice PDF",
+        downloadAnnotatedPdf: "Annotated PDF",
+        openViewer: "Open Viewer",
+        submissionHistory: "Submission History",
+        submissionHistorySub: "Access and reload previous screenings",
+        findings: "Findings",
+        score: "Score",
+        status: "Status",
+        startNewReview: "Start New Review",
+        noSubmissions: "No previous submissions found.",
+        backToDashboard: "Back to Dashboard",
+        drawingsLabel: "Drawings",
+        markersOnSheet: "marker on sheet",
+        markersOnSheetPlural: "markers on sheet",
+        zoom: "Zoom",
+        panLabel: "Pan: Drag Mouse / Spacebar",
+        minimapLabel: "Minimap",
+        complianceStatus: "Compliance Status",
+        appliedCodeSet: "Applied Code Set",
+        allFindings: "All Findings",
+        keysToNavigate: "↑↓ keys to navigate",
+        codeSection: "Code Section",
+        zoomOut: "Zoom Out (-)",
+        zoomIn: "Zoom In (+)",
+        sliderLabel: "Slider",
+        fitWidth: "Fit Width",
+        fitPage: "Fit Page",
+        actualSize: "1:1 Actual Size",
+        resetView: "Reset View",
+        sheetPage: "Sheet / Page",
+        ruleCode: "Rule Code",
+        downloadPdf: "Download PDF",
+      },
+      es: {
+        newReview: "Nueva Revisión",
+        results: "Resultados",
+        viewer: "Visor",
+        history: "Historial",
+        submitPlans: "Someter planos para revisión AI",
+        submitPlansSub: "Cargue el paquete de diseño en PDF. El sistema extraerá el texto, lo analizará contra el Conjunto de Códigos de Puerto Rico seleccionado (como el PRRC/PRBC), identificará discrepancias regulatorias y generará planos anotados interactivos.",
+        projectName: "Nombre del Proyecto",
+        municipality: "Municipio",
+        permitType: "Tipo de Permiso",
+        projectType: "Tipo de Proyecto",
+        codeSet: "Conjunto de Códigos",
+        codeSetSub: "Seleccione las directrices de código para ejecutar el motor de auditoría:",
+        auditLanguage: "Idioma de Auditoría",
+        useMock: "Usar Hallazgos de Prueba",
+        useMockSub: "(Modo offline / Demo rápida)",
+        dragDropPdf: "Arrastre y suelte el PDF de planos aquí",
+        dragDropSub: "o haga clic para buscar archivos",
+        browseFiles: "Buscar Archivos",
+        runPlanReview: "Ejecutar Revisión AI",
+        clearForm: "Limpiar Formulario",
+        auditPipelineStatus: "Estado de Ejecución del Proceso AI",
+        resultsDashboard: "Panel de Resultados de la Revisión de Planos",
+        discrepanciesCount: "Discrepancias que coinciden con las reglas seleccionadas",
+        findingDetails: "Detalles del Hallazgo",
+        activeAnnotationDetails: "Detalles de la Anotación",
+        evidenceLabel: "Evidencia",
+        explanationLabel: "Explicación del Requisito",
+        correctionLabel: "Corrección Requerida",
+        confidenceLabel: "Confianza del Modelo",
+        downloadNoticePdf: "PDF de Notificación",
+        downloadAnnotatedPdf: "PDF Anotado",
+        openViewer: "Abrir Visor",
+        submissionHistory: "Historial de Sométidos",
+        submissionHistorySub: "Acceda y recargue auditorías anteriores",
+        findings: "Hallazgos",
+        score: "Puntuación",
+        status: "Estado",
+        startNewReview: "Comenzar Nueva Revisión",
+        noSubmissions: "No se encontraron revisiones anteriores.",
+        backToDashboard: "Volver al Panel",
+        drawingsLabel: "Planos",
+        markersOnSheet: "marcador en plano",
+        markersOnSheetPlural: "marcadores en plano",
+        zoom: "Zoom",
+        panLabel: "Desplazar: Arrastrar ratón / Barra espaciadora",
+        minimapLabel: "Minimapa",
+        complianceStatus: "Estado de Cumplimiento",
+        appliedCodeSet: "Conjunto de Códigos Aplicado",
+        allFindings: "Todos los Hallazgos",
+        keysToNavigate: "Teclas ↑↓ para navegar",
+        codeSection: "Sección de Código",
+        zoomOut: "Alejar (-)",
+        zoomIn: "Acercar (+)",
+        sliderLabel: "Deslizador",
+        fitWidth: "Ajustar Ancho",
+        fitPage: "Ajustar Página",
+        actualSize: "Tamaño Real 1:1",
+        resetView: "Restablecer Vista",
+        sheetPage: "Hoja / Página",
+        ruleCode: "Código de Regla",
+        downloadPdf: "Descargar PDF",
+      }
+    };
+
+    function Seal({ size = 42 }) {
       return (
-        <div className="w-full bg-emerald-900 text-white text-xs select-none">
-          <div className="mx-auto max-w-7xl px-4 py-1.5 flex items-center justify-between">
-            <span className="tracking-wide font-medium">Gobierno de Puerto Rico</span>
-            <span className="text-emerald-200 font-mono text-[10px]">pr.gov</span>
-          </div>
-        </div>
+        <img
+          src="/static/tech_gov_logo.png"
+          alt="AI Plan Review"
+          className="shrink-0 object-contain"
+          style={{ width: size, height: size }}
+        />
       );
     }
 
-    function Seal({ size = 40 }) {
-      return (
-        <div className="rounded-full border border-emerald-800/20 bg-emerald-50/50 flex items-center justify-center text-emerald-800 shrink-0" style={{ width: size, height: size }}>
-          <Icons.Landmark size={size * 0.5} />
-        </div>
-      );
+    // Shared Header (GovTopBar removed)
+
+    function translateFinding(f, lang) {
+      if (lang === "en") return f;
+      
+      // Mappings based on standard code/sections or keywords
+      const codeMatches = [
+        { key: "107.2", title: "Plano arquitectónico incompleto", evidence: "El índice de hojas incluye planos no sometidos.", explanation: "Se requiere un conjunto arquitectónico completo para evaluar los medios de egreso, las separaciones y las disposiciones de seguridad humana.", correction: "Someter el conjunto arquitectónico completo que coincida con el índice." },
+        { key: "107", title: "Falta sello profesional", evidence: "No hay sello/firma/fecha del CIAPR en ningún bloque de título.", explanation: "Los documentos de construcción en Puerto Rico deben llevar el sello y la firma de un profesional licenciado por el Colegio de Ingenieros y Agrimensores de Puerto Rico (CIAPR).", correction: "Aplicar sello, firma y fecha con licencia del CIAPR a cada plano." },
+        { key: "R310", title: "Apertura de escape y rescate de emergencia (EERO) no verificable", evidence: "Dormitorio requiere apertura de escape libre neta y antepecho adecuados.", explanation: "Cada dormitorio requiere una apertura de escape y rescate de emergencia operable >= 5.7 pies cuadrados, con antepecho <= 44 pulgadas.", correction: "Especificar apertura libre neta + altura de antepecho; proveer EERO operable que cumpla por dormitorio." },
+        { key: "R302.6", title: "Separación garaje/vivienda incompleta", evidence: "Habitación habitable sobre el garaje; no hay techo de placa de yeso Tipo X de 5/8\".", explanation: "El espacio habitable sobre un garaje requiere una separación de techo de placa de yeso Tipo X de 5/8 de pulgada y penetraciones protegidas.", correction: "Especificar techo de garaje de Tipo X de 5/8\" + penetraciones protegidas." },
+        { key: "R202", title: "Cantidad de unidades de vivienda ambigua", evidence: "Segunda cocina + nivel inferior separable; cantidad de unidades no declarada.", explanation: "La cantidad de unidades determina la ruta de código aplicable (PRRC frente a PRBC) y los requisitos de separación.", correction: "Declarar la cantidad de unidades; si son dos unidades, mostrar separación + egreso independiente." },
+        { key: "1609.2", title: "Protección contra escombros arrastrados por el viento no mostrada", evidence: "Gran acristalamiento fijo, sin contraventanas; San Juan está en la región de escombros.", explanation: "Las aperturas acristaladas en la región de escombros arrastrados por el viento requieren vidrio resistente a impactos o protección de apertura probada.", correction: "Añadir un programa de protección de aperturas con presiones de diseño por apertura." },
+        { key: "1613", title: "Categoría de diseño sísmico no declarada", evidence: "Las notas indican 'Zona Sísmica C'; no hay Ss/S1 del sitio ni SDC.", explanation: "El sistema lateral y cualquier detalle de hormigón deben diseñarse de acuerdo con la SDC del sitio.", correction: "Proveer Ss/S1, derivar SDC, mostrar sistema lateral + detalles del Capítulo 18 de ACI 318." },
+        { key: "1609", title: "Velocidad de viento no basada en PR", evidence: "Las notas indican 76/90 mph; PR es de ~145-170 mph última.", explanation: "La velocidad de viento de diseño última debe cumplir con el mapa de viento de PR (típicamente 145-170 mph).", correction: "Volver a declarar la velocidad de viento de diseño del mapa de PR / Herramienta de Peligros de ASCE 7." },
+        { key: "amend", title: "Faltan conectores resistentes a la corrosión", evidence: "Conectores 'STD GALVANIZED' para miembros expuestos.", explanation: "Las enmiendas del código de edificación de Puerto Rico requieren herrajes resistentes a la corrosión para miembros expuestos.", correction: "Actualizar los conectores/anclajes expuestos a la clase de corrosión requerida." },
+        { key: "corrosion", title: "Faltan conectores resistentes a la corrosión", evidence: "Conectores 'STD GALVANIZED' para miembros expuestos.", explanation: "Las enmiendas del código de edificación de Puerto Rico requieren herrajes resistentes a la corrosión para miembros expuestos.", correction: "Actualizar los conectores/anclajes expuestos a la clase de corrosión requerida." },
+        { key: "IECC", title: "Cumplimiento energético no corresponde a Zona 1A", evidence: "Arrastres de clima frío (carga de nieve en el terreno de 71 psf).", explanation: "El modelado de cumplimiento energético debe ser para la Zona Climática 1A (cálido-húmedo) utilizando objetivos de SHGC.", correction: "Reejecutar el análisis energético para la Zona 1A; eliminar elementos de nieve/clima frío." },
+        { key: "R312", title: "Falta diseño de baranda de protección", evidence: "Borde del balcón con caída >30\"; no se proporciona detalle.", explanation: "Se requieren protecciones donde la caída supere las 30 pulgadas; la altura mínima es de 36 pulgadas.", correction: "Añadir detalle de baranda: mínimo 36\", aberturas <4\" de esfera, cargas de 50 plf/200 lb." },
+        { key: "QA_lbl", title: "Vistas ilustrativas sin etiquetar", evidence: "Vistas de diagramas no etiquetadas como 'no aptas para construcción'.", explanation: "Los planos estructurales esquemáticos deben distinguirse claramente de los detalles de construcción.", correction: "Etiquetar vistas como esquemáticas frente a vistas para construcción." },
+        { key: "lbl", title: "Vistas ilustrativas sin etiquetar", evidence: "Vistas de diagramas no etiquetadas como 'no aptas para construcción'.", explanation: "Los planos estructurales esquemáticos deben distinguirse claramente de los detalles de construcción.", correction: "Etiquetar vistas como esquemáticas frente a vistas para construcción." },
+        { key: "R311.7", title: "Ancho de escalera por debajo del mínimo", evidence: "Nota de escalera 'ancho mín 34in'.", explanation: "El ancho mínimo de la escalera según el Código Residencial Internacional es de 36 pulgadas.", correction: "Corregir nota a un ancho libre mínimo de 36\"." },
+        { key: "QA_win", title: "Falta columna de apertura libre neta", evidence: "El programa carece de columna de apertura libre neta.", explanation: "Se requiere una columna de apertura libre neta en los programas de ventanas para verificar el cumplimiento de los EEROs.", correction: "Añadir una columna de apertura libre neta al programa de ventanas." },
+        { key: "win", title: "Falta columna de apertura libre neta", evidence: "El programa carece de columna de apertura libre neta.", explanation: "Se requiere una columna de apertura libre neta en los programas de ventanas para verificar el cumplimiento de los EEROs.", correction: "Añadir una columna de apertura libre neta al programa de ventanas." },
+        { key: "AppG", title: "Determinación de zona de inundación ausente", evidence: "Parcela costera; no se muestra zona FEMA ni BFE.", explanation: "Las parcelas costeras requieren consideraciones de diseño de inundaciones para resistir olas y fuerzas hidrodinámicas.", correction: "Añadir determinación de inundación; si es SFHA mostrar BFE + ASCE 24." },
+        { key: "flood", title: "Determinación de zona de inundación ausente", evidence: "Parcela costera; no se muestra zona FEMA ni BFE.", explanation: "Las parcelas costeras requieren consideraciones de diseño de inundaciones para resistir olas y fuerzas hidrodinámicas.", correction: "Añadir determinación de inundación; si es SFHA mostrar BFE + ASCE 24." },
+        { key: "QA", title: "Discrepancia en el índice de planos", evidence: "El índice incluye planos que no están presentan en el paquete.", explanation: "El índice de planos debe coincidir exactamente con los planos presentados para evitar vacíos en la documentación.", correction: "Conciliar el índice con los planos presentados." }
+      ];
+
+      const code = String(f.code || "").toLowerCase();
+      const title = String(f.title || "").toLowerCase();
+      const id = String(f.id || "").toLowerCase();
+
+      // Find first match based on code or title or ID keyword
+      let tr = null;
+      for (const m of codeMatches) {
+        const key = m.key.toLowerCase();
+        if (code.includes(key) || title.includes(key) || id.includes(key)) {
+          tr = m;
+          break;
+        }
+      }
+
+      // Fallback matching by common English phrases if code/title contains keywords
+      if (!tr) {
+        if (title.includes("seal") || title.includes("signature")) {
+          tr = codeMatches.find(x => x.key === "107");
+        } else if (title.includes("architectural") && (title.includes("incomplete") || title.includes("partial"))) {
+          tr = codeMatches.find(x => x.key === "107.2");
+        } else if (title.includes("eero") || title.includes("escape") || title.includes("sleeping")) {
+          tr = codeMatches.find(x => x.key === "R310");
+        } else if (title.includes("garage") || title.includes("separation")) {
+          tr = codeMatches.find(x => x.key === "R302.6");
+        } else if (title.includes("dwelling") || title.includes("unit count")) {
+          tr = codeMatches.find(x => x.key === "R202");
+        } else if (title.includes("windborne") || title.includes("debris")) {
+          tr = codeMatches.find(x => x.key === "1609.2");
+        } else if (title.includes("seismic") || title.includes("sdc")) {
+          tr = codeMatches.find(x => x.key === "1613");
+        } else if (title.includes("wind speed")) {
+          tr = codeMatches.find(x => x.key === "1609");
+        } else if (title.includes("corrosion") || title.includes("exposed")) {
+          tr = codeMatches.find(x => x.key === "amend");
+        } else if (title.includes("energy") || title.includes("iecc") || title.includes("climate")) {
+          tr = codeMatches.find(x => x.key === "IECC");
+        } else if (title.includes("guardrail") || title.includes("guard")) {
+          tr = codeMatches.find(x => x.key === "R312");
+        } else if (title.includes("illustrative") || title.includes("rendering") || title.includes("construction")) {
+          tr = codeMatches.find(x => x.key === "QA_lbl");
+        } else if (title.includes("stair") || title.includes("width")) {
+          tr = codeMatches.find(x => x.key === "R311.7");
+        } else if (title.includes("window") || title.includes("schedule")) {
+          tr = codeMatches.find(x => x.key === "QA_win");
+        } else if (title.includes("flood")) {
+          tr = codeMatches.find(x => x.key === "AppG");
+        } else if (title.includes("index") || title.includes("drawing index")) {
+          tr = codeMatches.find(x => x.key === "QA");
+        }
+      }
+
+      if (!tr) {
+        // Try mapping direct ID as a last resort
+        const mapping = {
+          "HF-01": { title: "Falta sello profesional", evidence: "No hay sello/firma/fecha del CIAPR en ningún bloque de título.", explanation: "Los documentos de construcción en Puerto Rico deben llevar el sello y la firma de un profesional licenciado por el Colegio de Ingenieros y Agrimensores de Puerto Rico (CIAPR).", correction: "Aplicar sello, firma y fecha con licencia del CIAPR a cada plano." },
+          "HF-02": { title: "Plano arquitectónico incompleto", evidence: "El índice de hojas incluye planos no sometidos.", explanation: "Se requiere un conjunto arquitectónico completo para evaluar los medios de egreso, las separaciones y las disposiciones de seguridad humana.", correction: "Someter el conjunto arquitectónico completo que coincida con el índice." },
+          "LF-03": { title: "Discrepancia en el índice de planos", evidence: "El índice incluye planos que no están presentes en el paquete.", explanation: "El índice de planos debe coincidir exactamente con los planos presentados para evitar vacíos en la documentación.", correction: "Conciliar el índice con los planos presentados." },
+          "HF-07": { title: "EERO no verificable", evidence: "Dormitorio 2 = Vidrio Fijo 36x72; no se tabuló apertura libre neta.", explanation: "Cada habitación requiere una apertura de escape y rescate de emergencia operable >= 5.7 pies cuadrados, con antepecho <= 44 pulgadas.", correction: "Añadir columnas de apertura libre neta + altura de antepecho; proveer EERO operable que cumpla por dormitorio." },
+          "MF-05": { title: "Separación garaje/vivienda incompleta", evidence: "Habitación habitable sobre el garaje; no hay techo de placa de yeso Tipo X de 5/8\".", explanation: "El espacio habitable sobre un garaje requiere una separación de techo de placa de yeso Tipo X de 5/8 de pulgada y penetraciones protegidas.", correction: "Especificar techo de garaje de Tipo X de 5/8\" + penetraciones protegidas." },
+          "HF-06": { title: "Cantidad de unidades de vivienda ambigua", evidence: "Segunda cocina + nivel inferior separable; cantidad de unidades no declarada.", explanation: "La cantidad de unidades determina la ruta de código aplicable (PRRC frente a PRBC) y los requisitos de separación.", correction: "Declarar la cantidad de unidades; si son dos unidades, mostrar separación + egreso independiente." },
+          "HF-08": { title: "Protección contra escombros arrastrados por el viento no mostrada", evidence: "Gran acristalamiento fijo, sin contraventanas; San Juan está en la región de escombros.", explanation: "Las aperturas acristaladas en la región de escombros arrastrados por el viento requieren vidrio resistente a impactos o protección de apertura probada.", correction: "Añadir un programa de protección de aperturas con presiones de diseño por apertura." },
+          "HF-09": { title: "Categoría de diseño sísmico no declarada", evidence: "Las notas indican 'Zona Sísmica C'; no hay Ss/S1 del sitio ni SDC.", explanation: "El sistema lateral y cualquier detalle de hormigón deben diseñarse de acuerdo con la SDC del sitio.", correction: "Proveer Ss/S1, derivar SDC, mostrar sistema lateral + detalles del Capítulo 18 de ACI 318." },
+          "MF-01": { title: "Velocidad de viento no basada en PR", evidence: "Las notas indican 76/90 mph; PR es de ~145-170 mph última.", explanation: "La velocidad de viento de diseño última debe cumplir con el mapa de viento de PR (típicamente 145-170 mph).", correction: "Volver a declarar la velocidad de viento de diseño del mapa de PR / Herramienta de Peligros de ASCE 7." },
+          "MF-03": { title: "Faltan conectores resistentes a la corrosión", evidence: "Conectores 'STD GALVANIZED' para miembros expuestos.", explanation: "Las enmiendas del código de edificación de Puerto Rico requieren herrajes resistentes a la corrosión para miembros expuestos.", correction: "Actualizar los conectores/anclajes expuestos a la clase de corrosión requerida." },
+          "MF-06": { title: "Cumplimiento energético no corresponde a Zona 1A", evidence: "Arrastres de clima frío (carga de nieve en el terreno de 71 psf).", explanation: "El modelado de cumplimiento energético debe ser para la Zona Climática 1A (cálido-húmedo) utilizando objetivos de SHGC.", correction: "Reejecutar el análisis energético para la Zona 1A; eliminar elementos de nieve/clima frío." },
+          "HF-05": { title: "Falta diseño de baranda de protección", evidence: "Borde del balcón con caída >30\"; no se proporciona detalle.", explanation: "Se requieren protecciones donde la caída supere las 30 pulgadas; la altura mínima es de 36 pulgadas.", correction: "Añadir detalle de baranda: mínimo 36\", aberturas <4\" de esfera, cargas de 50 plf/200 lb." },
+          "LF-04": { title: "Vistas ilustrativas sin etiquetar", evidence: "Vistas de diagramas no etiquetadas como 'no aptas para construcción'.", explanation: "Los planos estructurales esquemáticos deben distinguirse claramente de los detalles de construcción.", correction: "Etiquetar vistas como esquemáticas frente a vistas para construcción." },
+          "MF-04": { title: "Ancho de escalera por debajo del mínimo", evidence: "Nota de escalera 'ancho mín 34in'.", explanation: "El ancho mínimo de la escalera según el Código Residencial Internacional es de 36 pulgadas.", correction: "Corregir nota a un ancho libre mínimo de 36\"." },
+          "LF-01": { title: "Brecha de numeración en el programa de ventanas", evidence: "Las etiquetas omiten W1-19.", explanation: "Las brechas de numeración en las etiquetas del programa de ventanas pueden indicar componentes faltantes de los planos estructurales.", correction: "Confirmar que no se haya omitido ninguna ventana; renumerar o anotar la brecha." },
+          "LF-02": { title: "Falta columna de apertura libre neta", evidence: "El programa carece de columna de apertura libre neta.", explanation: "Se requiere una columna de apertura libre neta en los programas de ventanas para verificar el cumplimiento de los EEROs.", correction: "Añadir una columna de apertura libre neta al programa de ventanas." },
+          "MF-02": { title: "Determinación de zona de inundación ausente", evidence: "Parcela costera; no se muestra zona FEMA ni BFE.", explanation: "Las parcelas costeras requieren consideraciones de diseño de inundaciones para resistir olas y fuerzas hidrodinámicas.", correction: "Añadir determinación de inundación; si es SFHA mostrar BFE + ASCE 24." }
+        };
+        tr = mapping[f.id];
+      }
+
+      if (!tr) return f;
+      return {
+        ...f,
+        title: tr.title || f.title,
+        evidence: tr.evidence || f.evidence,
+        explanation: tr.explanation || f.explanation,
+        correction: tr.correction || f.correction
+      };
     }
 
-    function AppHeader({ right, left }) {
+    function AppHeader({ activeTab, onNav, right, lang, setLang }) {
+      const tabs = [
+        { id: "upload", label: lang === "en" ? TRANSLATIONS.en.newReview : TRANSLATIONS.es.newReview },
+        { id: "results", label: lang === "en" ? TRANSLATIONS.en.results : TRANSLATIONS.es.results },
+        { id: "viewer", label: lang === "en" ? TRANSLATIONS.en.viewer : TRANSLATIONS.es.viewer },
+        { id: "history", label: lang === "en" ? TRANSLATIONS.en.history : TRANSLATIONS.es.history },
+      ];
       return (
-        <>
-          <GovTopBar />
-          <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm">
-            <div className="mx-auto max-w-7xl px-4 py-3.5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {left || (
-                  <>
-                    <Seal size={42} />
-                    <div className="leading-tight">
-                      <p className="text-sm font-bold text-emerald-800 tracking-wide">Oficina de Gerencia de Permisos</p>
-                      <p className="text-[11px] font-semibold text-teal-600/80">AI Plan Review Portal</p>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-4 text-sm font-medium">
-                {right}
+        <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm w-full">
+          <div className="px-6 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Seal size={42} />
+              <div className="leading-tight hidden sm:block">
+                <p className="text-sm font-extrabold text-teal-800 tracking-wide">AI Plan Review Portal</p>
               </div>
             </div>
-          </header>
-        </>
-      );
-    }
-
-    // Login Screen
-    function LoginScreen({ onLogin }) {
-      return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
-          <div>
-            <GovTopBar />
-            <header className="border-b border-gray-200 bg-white shadow-sm">
-              <div className="mx-auto max-w-6xl px-4 py-6 flex items-center gap-4">
-                <Seal size={56} />
-                <div>
-                  <h1 className="text-xl font-extrabold tracking-tight text-gray-900 leading-none">BUSINESS PORTAL</h1>
-                  <p className="text-xs font-semibold text-emerald-800 mt-1 uppercase tracking-wider">Oficina de Gerencia de Permisos</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Gobierno de Puerto Rico</p>
-                </div>
+            {/* Center nav tabs */}
+            <nav className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
+              {tabs.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => onNav(t.id)}
+                  className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition ${activeTab === t.id
+                    ? 'bg-teal-700 text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
+                    }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </nav>
+            <div className="flex items-center gap-3 text-sm font-medium">
+              {right}
+              {/* Discreet EN / ES selector toggle */}
+              <div className="flex items-center gap-0.5 rounded-md bg-gray-100 p-0.5 text-[9px] font-bold border border-gray-200 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setLang("en")}
+                  className={`rounded px-1.5 py-0.5 transition ${lang === "en" ? "bg-teal-700 text-white shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang("es")}
+                  className={`rounded px-1.5 py-0.5 transition ${lang === "es" ? "bg-teal-700 text-white shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                >
+                  ES
+                </button>
               </div>
-            </header>
-            <div className="h-28 w-full bg-gradient-to-r from-emerald-800 to-teal-800 flex flex-col items-center justify-center px-4 text-center">
-              <span className="text-[10px] uppercase tracking-widest text-emerald-200 font-bold">Plan Review Pilot System</span>
-              <h2 className="text-white text-lg font-bold mt-1">Autonomous Code Compliance & Drawing Annotation Engine</h2>
             </div>
-
-            <main className="bg-gray-50 flex-1 flex items-center justify-center px-4 py-10">
-              <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-md">
-                <h3 className="text-xl font-bold text-gray-900">Sign In</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Acceso al portal administrativo y solicitantes</p>
-
-                <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">E-mail / Correo Electrónico</label>
-                    <div className="relative mt-1.5">
-                      <Icons.Mail size={16} className="absolute left-3.5 top-3 text-gray-400" />
-                      <input type="email" required defaultValue="rivera.c@ogpe.pr.gov" className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Password / Contraseña</label>
-                    <div className="relative mt-1.5">
-                      <Icons.Lock size={16} className="absolute left-3.5 top-3 text-gray-400" />
-                      <input type="password" required defaultValue="••••••••" className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <a href="#" className="text-teal-700 hover:underline font-semibold">Forgot Password?</a>
-                    <a href="#" className="text-teal-700 hover:underline font-semibold">Register Account</a>
-                  </div>
-
-                  <button type="submit" className="w-full bg-teal-700 text-white hover:bg-teal-800 font-bold py-3 rounded-lg text-sm transition shadow-sm mt-6 flex items-center justify-center gap-2">
-                    <Icons.Lock size={14} /> Enter Portal / Ingresar
-                  </button>
-                </form>
-              </div>
-            </main>
           </div>
-          <footer className="border-t border-gray-200 bg-white py-5 text-center text-xs text-gray-400">
-            <p className="font-semibold text-gray-500">Puerto Rico Permit Management Office (OGPe)</p>
-            <p className="mt-1">© 2026 Government of Puerto Rico. All rights reserved.</p>
-          </footer>
-        </div>
+        </header>
       );
     }
+
+    // LoginScreen removed — app starts at upload screen
 
     // Upload Screen
     const LOADING_STEPS = [
@@ -344,7 +569,7 @@
       ["Preparing official correction notice", "Preparando notificación formal de correcciones"],
     ];
 
-    function UploadScreen({ onRun, onLogout, onHistory, codeSets }) {
+    function UploadScreen({ onRun, onNav, codeSets, lang, setLang }) {
       const [projectName, setProjectName] = useState("Modelo D - Residencia");
       const [municipality, setMunicipality] = useState("San Juan");
       const [permitType, setPermitType] = useState("Construction");
@@ -354,7 +579,7 @@
       const [useMock, setUseMock] = useState(false);
       const [file, setFile] = useState(null);
       const [fileName, setFileName] = useState("");
-      
+
       const [step, setStep] = useState(-1);
       const fileInputRef = useRef(null);
 
@@ -421,62 +646,47 @@
       };
 
       return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+        <div className="flex-1 flex flex-col justify-between">
           <div className="flex-1 flex flex-col">
-            <AppHeader
-              right={
-                <>
-                  <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
-                  <button onClick={onHistory} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
-                    <Icons.FileText size={15} /> History
-                  </button>
-                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
-                    <Icons.LogOut size={15} /> Logout
-                  </button>
-                </>
-              }
-            />
-
             <main className="mx-auto max-w-3xl w-full px-4 py-8 flex-1">
               <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8 shadow-md transition">
-                <h2 className="text-2xl font-bold text-gray-900">Submit Plans for AI Review</h2>
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Someter planos y especificaciones para revisión AI</p>
+                <h2 className="text-2xl font-bold text-gray-900">{TRANSLATIONS[lang].submitPlans}</h2>
                 <p className="mt-4 text-sm leading-relaxed text-gray-600">
-                  Upload the design package PDF. The system will extract text, analyze it against the chosen Puerto Rico Code Set (such as the PRRC/PRBC), identify regulatory discrepancies, and generate interactive, annotated drawings.
+                  {TRANSLATIONS[lang].submitPlansSub}
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Project Name</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].projectName}</label>
                       <input type="text" value={projectName} onChange={e => setProjectName(e.target.value)} required className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Municipality / Municipio</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].municipality}</label>
                       <input type="text" value={municipality} onChange={e => setMunicipality(e.target.value)} required className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Permit Type</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].permitType}</label>
                       <select value={permitType} onChange={e => setPermitType(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
-                        <option value="Construction">Construction Permit (Permiso de Construcción)</option>
-                        <option value="Use">Use Permit (Permiso de Uso)</option>
-                        <option value="Consolidated">Consolidated Permit (PCOC)</option>
+                        <option value="Construction">{lang === "en" ? "Construction Permit" : "Permiso de Construcción"}</option>
+                        <option value="Use">{lang === "en" ? "Use Permit" : "Permiso de Uso"}</option>
+                        <option value="Consolidated">{lang === "en" ? "Consolidated Permit" : "Permiso Único (PCOC)"}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Project Type</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].projectType}</label>
                       <select value={projectType} onChange={e => setProjectType(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
-                        <option value="Residential">Residential (Residencial)</option>
-                        <option value="Commercial">Commercial (Comercial)</option>
-                        <option value="Mixed Use">Mixed Use (Uso Mixto)</option>
+                        <option value="Residential">{lang === "en" ? "Residential" : "Residencial"}</option>
+                        <option value="Commercial">{lang === "en" ? "Commercial" : "Comercial"}</option>
+                        <option value="Mixed Use">{lang === "en" ? "Mixed Use" : "Uso Mixto"}</option>
                       </select>
                     </div>
                   </div>
 
                   {/* Code set picker */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Code Set / Conjunto de Códigos</label>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Select the code guidelines to execute the audit engine against:</p>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].codeSet}</label>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{TRANSLATIONS[lang].codeSetSub}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
                       {codeSets.map(cs => (
                         <button type="button" key={cs.id} onClick={() => setCodeSetId(cs.id)}
@@ -485,7 +695,14 @@
                             <span className="text-sm font-bold text-gray-900">{cs.name}</span>
                             {codeSetId === cs.id && <Icons.Check size={16} className="text-teal-700" />}
                           </div>
-                          <span className="text-xs text-gray-500 mt-1.5 leading-snug">{cs.id === 'prrc_2018' ? '2018 IRC + PR Amendments (Single-family residential design)' : cs.id === 'prbc_2018' ? '2018 IBC + PR Wind/Seismic (Commercial and large structures)' : 'Unified ruleset checking wind, structural and general layouts.'}</span>
+                          <span className="text-xs text-gray-500 mt-1.5 leading-snug">
+                            {cs.id === 'prrc_2018' 
+                              ? (lang === "en" ? "2018 IRC + PR Amendments (Single-family residential design)" : "2018 IRC + Enmiendas de PR (Diseño residencial unifamiliar)")
+                              : cs.id === 'prbc_2018' 
+                              ? (lang === "en" ? "2018 IBC + PR Wind/Seismic (Commercial and large structures)" : "2018 IBC + Viento/Sísmico de PR (Estructuras comerciales y grandes)")
+                              : (lang === "en" ? "Unified ruleset checking wind, structural and general layouts." : "Reglas unificadas para viento, cargas estructurales y distribución general.")
+                            }
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -493,23 +710,23 @@
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Audit Language / Idioma</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{TRANSLATIONS[lang].auditLanguage}</label>
                       <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm mt-1 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 transition">
-                        <option value="English">English</option>
-                        <option value="Spanish">Español</option>
+                        <option value="English">{lang === "en" ? "English" : "Inglés"}</option>
+                        <option value="Spanish">{lang === "en" ? "Spanish" : "Español"}</option>
                       </select>
                     </div>
                     <div className="flex items-center mt-4 sm:mt-0 select-none">
                       <input type="checkbox" id="mock-check" checked={useMock} onChange={e => setUseMock(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-700 focus:ring-teal-600" />
                       <label htmlFor="mock-check" className="ml-2.5 block text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
-                        Use Mock Findings <span className="text-[10px] text-gray-400 font-semibold">(Offline / Rapid Demo)</span>
+                        {TRANSLATIONS[lang].useMock} <span className="text-[10px] text-gray-400 font-semibold">{TRANSLATIONS[lang].useMockSub}</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Upload area */}
                   <div className="pt-2">
-                    <span className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Permit Package PDF Drawings</span>
+                    <span className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{lang === "en" ? "Permit Package PDF Drawings" : "Paquete de Planos PDF"}</span>
                     <div
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
@@ -517,10 +734,10 @@
                       onClick={() => fileInputRef.current.click()}
                     >
                       <Icons.Upload className="mx-auto text-gray-400" size={32} />
-                      <p className="mt-3 text-sm font-semibold text-gray-700">Drag and drop drawing set PDF here</p>
-                      <p className="text-xs text-gray-400 mt-1">Arrastre o seleccione el archivo de planos en formato PDF</p>
+                      <p className="mt-3 text-sm font-semibold text-gray-700">{TRANSLATIONS[lang].dragDropPdf}</p>
+                      <p className="text-xs text-gray-400 mt-1">{TRANSLATIONS[lang].dragDropSub}</p>
                       <button type="button" className="mt-4 rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition shadow-sm">
-                        Browse Files
+                        {TRANSLATIONS[lang].browseFiles}
                       </button>
                       <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
                         onChange={(e) => { if (e.target.files?.[0]) { setFile(e.target.files[0]); setFileName(e.target.files[0].name); } }} />
@@ -539,21 +756,18 @@
                   <div className="pt-3 flex flex-wrap items-center gap-3">
                     <button type="submit" disabled={running} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-bold px-6 py-3.5 text-sm transition shadow">
                       {running ? <Icons.Loader2 size={16} /> : <Icons.ClipboardList size={16} />}
-                      Run Plan Review AI
+                      {TRANSLATIONS[lang].runPlanReview}
                     </button>
                     <button type="button" onClick={() => { setFile(null); setFileName(""); }} disabled={running} className="rounded-xl border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-bold px-6 py-3.5 text-sm transition shadow-sm">
-                      Clear Form
+                      {TRANSLATIONS[lang].clearForm}
                     </button>
-                    <span className="text-[11px] text-gray-400 font-semibold ml-auto">
-                      Engine: claude-opus-4-8 (low)
-                    </span>
                   </div>
                 </form>
 
                 {/* Progress Loader steps */}
                 {running && (
                   <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-inner transition">
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Pipeline Execution Status</h4>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{TRANSLATIONS[lang].auditPipelineStatus}</h4>
                     <ul className="mt-4 space-y-3.5">
                       {LOADING_STEPS.map(([en, es], i) => {
                         const done = i < step;
@@ -568,7 +782,7 @@
                               <span className="h-4.5 w-4.5 rounded-full border border-gray-300 shrink-0 bg-white" />
                             )}
                             <span className={done ? "text-gray-500 font-medium" : active ? "text-teal-900 font-bold" : "text-gray-400"}>
-                              {en} <span className="text-gray-400 font-normal">/ {es}</span>
+                              {lang === "en" ? en : es}
                             </span>
                           </li>
                         );
@@ -586,318 +800,44 @@
       );
     }
 
-    // Saved Review History
-    function HistoryScreen({ onOpenReview, onOpenViewer, onNewSubmission, onLogout }) {
-      const [reviews, setReviews] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [error, setError] = useState("");
-      const [busyId, setBusyId] = useState("");
-
-      const loadHistory = async () => {
-        setLoading(true);
-        setError("");
-        try {
-          const res = await fetch("/api/reviews");
-          if (!res.ok) throw new Error("Could not load review history");
-          const data = await res.json();
-          setReviews(data);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      useEffect(() => {
-        loadHistory();
-      }, []);
-
-      const formatWhen = (review) => {
-        const raw = review.created_at || (review.mtime ? new Date(review.mtime * 1000).toISOString() : null);
-        if (!raw) return "Unknown date";
-        try {
-          return new Date(raw).toLocaleString();
-        } catch (err) {
-          return raw;
-        }
-      };
-
-      const loadReview = async (review, target = "results") => {
-        setBusyId(`${review.id}:${target}`);
-        try {
-          const res = await fetch(`/api/reviews/${review.id}/load`);
-          if (!res.ok) throw new Error("Saved review could not be loaded");
-          const data = await res.json();
-          if (target === "viewer") {
-            onOpenViewer(data);
-          } else {
-            onOpenReview(data);
-          }
-        } catch (err) {
-          alert("Error loading saved review: " + err.message);
-        } finally {
-          setBusyId("");
-        }
-      };
-
-      const rerenderReview = async (review) => {
-        setBusyId(`${review.id}:rerender`);
-        try {
-          const res = await fetch(`/api/reviews/${review.id}/rerender`, { method: "POST" });
-          if (!res.ok) {
-            const payload = await res.json().catch(() => ({}));
-            throw new Error(payload.error || "Could not rebuild viewer assets");
-          }
-          const data = await res.json();
-          onOpenViewer(data);
-        } catch (err) {
-          alert("Error rebuilding viewer from saved findings: " + err.message);
-        } finally {
-          setBusyId("");
-        }
-      };
-
-      const downloadReport = async (review) => {
-        setBusyId(`${review.id}:report`);
-        try {
-          const res = await fetch(`/api/reviews/${review.id}/generate-report`, { method: "POST" });
-          if (!res.ok) throw new Error("Could not generate correction notice PDF");
-          const payload = await res.json();
-          const a = document.createElement("a");
-          a.href = payload.report_url;
-          a.download = payload.file_name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          await loadHistory();
-        } catch (err) {
-          alert("Error downloading correction notice: " + err.message);
-        } finally {
-          setBusyId("");
-        }
-      };
-
-      return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
-          <div className="flex-1 flex flex-col">
-            <AppHeader
-              left={
-                <button onClick={onNewSubmission} className="inline-flex items-center gap-2 text-teal-700 hover:text-teal-900 font-bold transition">
-                  <Icons.ArrowLeft size={16} /> New Submission
-                </button>
-              }
-              right={
-                <>
-                  <button onClick={loadHistory} disabled={loading} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline disabled:opacity-50">
-                    {loading ? <Icons.Loader2 size={15} /> : <Icons.ClipboardList size={15} />} Refresh
-                  </button>
-                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
-                    <Icons.LogOut size={15} /> Logout
-                  </button>
-                </>
-              }
-            />
-
-            <main className="mx-auto max-w-7xl w-full px-4 py-8 flex-1">
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Submission History</h2>
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Previously submitted drawing packages and cached AI outputs</p>
-                  <p className="mt-3 max-w-3xl text-sm text-gray-600 leading-relaxed">
-                    Saved reviews can be reopened without calling the LLM again. Use <span className="font-bold text-teal-700">Open Viewer</span> to test annotations and thumbnails from cached results, or <span className="font-bold text-teal-700">Rebuild Viewer</span> to regenerate annotated PDFs/images from the stored source PDF and findings only.
-                  </p>
-                </div>
-                <button onClick={onNewSubmission} className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 text-sm transition shadow">
-                  <Icons.Upload size={16} /> Submit New Plans
-                </button>
-              </div>
-
-              {error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
-                  {error}
-                </div>
-              )}
-
-              <div className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
-                <div className="border-b border-gray-200 px-5 py-4 flex items-center justify-between bg-gray-50/60">
-                  <span className="text-sm font-bold text-gray-900">Saved Reviews</span>
-                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-500">{reviews.length} total</span>
-                </div>
-
-                {loading ? (
-                  <div className="p-10 text-center text-sm font-semibold text-gray-500 flex items-center justify-center gap-2">
-                    <Icons.Loader2 size={18} /> Loading saved submissions...
-                  </div>
-                ) : reviews.length === 0 ? (
-                  <div className="p-10 text-center">
-                    <Icons.FileText size={34} className="mx-auto text-gray-300" />
-                    <h3 className="mt-3 text-base font-bold text-gray-900">No saved submissions yet</h3>
-                    <p className="mt-1 text-sm text-gray-500">Run a plan review once, then return here to reopen the viewer without spending tokens.</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {reviews.map((review) => {
-                      const project = review.project || {};
-                      const result = review.result || {};
-                      const ready = (result.readiness_score || 0) >= 70;
-                      const pdfUrl = `${review.files_base}/annotated.pdf`;
-                      const isBusy = busyId.startsWith(`${review.id}:`);
-                      return (
-                        <li key={review.id} className="p-5 hover:bg-gray-50/70 transition">
-                          <div className="flex flex-col xl:flex-row xl:items-center gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="text-base font-bold text-gray-900 truncate">{project.name || "Untitled Project"}</h3>
-                                <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-bold ${ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                                  {ready ? <Icons.CheckCircle2 size={11} /> : <Icons.AlertTriangle size={11} />}
-                                  {result.status || "Cached Review"}
-                                </span>
-                                <span className="rounded-lg border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-bold text-gray-500 font-mono">ID {review.id}</span>
-                              </div>
-                              <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-2 text-xs text-gray-500">
-                                <span><b className="text-gray-700">Saved:</b> {formatWhen(review)}</span>
-                                <span><b className="text-gray-700">Municipality:</b> {project.municipality || "N/A"}</span>
-                                <span><b className="text-gray-700">Findings:</b> {review.findings_count}</span>
-                                <span><b className="text-gray-700">Source:</b> {review.source_file_name || "source.pdf"}</span>
-                              </div>
-                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
-                                <span className={review.has_source_pdf ? "text-emerald-700" : "text-red-600"}>{review.has_source_pdf ? "✓ Source PDF stored" : "Missing source PDF"}</span>
-                                <span className={review.has_manifest ? "text-emerald-700" : "text-amber-600"}>{review.has_manifest ? "✓ Viewer manifest" : "Needs viewer rebuild"}</span>
-                                <span className={review.has_annotated_pdf ? "text-emerald-700" : "text-amber-600"}>{review.has_annotated_pdf ? "✓ Annotated PDF" : "No annotated PDF"}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap xl:justify-end gap-2 shrink-0">
-                              <button onClick={() => loadReview(review, "results")} disabled={isBusy} className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-white transition shadow-sm">
-                                {busyId === `${review.id}:results` ? <Icons.Loader2 size={14} /> : <Icons.ClipboardList size={14} />} Dashboard
-                              </button>
-                              <button onClick={() => loadReview(review, "viewer")} disabled={isBusy || !review.has_manifest} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                                {busyId === `${review.id}:viewer` ? <Icons.Loader2 size={14} /> : <Icons.FileText size={14} />} Open Viewer
-                              </button>
-                              <button onClick={() => rerenderReview(review)} disabled={isBusy || !review.has_source_pdf} className="inline-flex items-center justify-center gap-2 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-teal-800 transition shadow-sm">
-                                {busyId === `${review.id}:rerender` ? <Icons.Loader2 size={14} /> : <Icons.CheckCircle2 size={14} />} Rebuild Viewer
-                              </button>
-                              <button onClick={() => downloadReport(review)} disabled={isBusy} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                                {busyId === `${review.id}:report` ? <Icons.Loader2 size={14} /> : <Icons.Download size={14} />} Report
-                              </button>
-                              {review.has_annotated_pdf && (
-                                <a href={pdfUrl} download className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                                  <Icons.Download size={14} /> PDF
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </main>
-          </div>
-        </div>
-      );
-    }
-
     // Results Dashboard
-    function ResultsScreen({ data, onOpenViewer, onLogout, onBack, onHistory }) {
+    function ResultsScreen({ data, onOpenViewer, onNav, lang, setLang }) {
       const [selId, setSelId] = useState(data.findings[0]?.id || "");
-      const findings = data.findings;
+      const findings = (data.findings || []).map(f => translateFinding(f, lang));
       const result = data.result;
       const project = data.project;
       const rid = data.review_id;
 
       const sel = findings.find(f => f.id === selId) || findings[0];
-
-      // Download full PDF helper
-      const pdfUrl = `${data.files_base}/annotated.pdf`;
-
-      const [generatingPDF, setGeneratingPDF] = useState(false);
-
-      // Download correction notice report (formatted PDF from backend)
-      const handleDownloadNotice = async () => {
-        setGeneratingPDF(true);
-        try {
-          const res = await fetch(`/api/reviews/${rid}/generate-report`, {
-            method: "POST"
-          });
-          if (!res.ok) {
-            throw new Error("Failed to generate PDF report from server");
-          }
-          const payload = await res.json();
-          // Trigger file download in browser
-          const a = document.createElement("a");
-          a.href = payload.report_url;
-          a.download = payload.file_name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        } catch (err) {
-          alert("Error generating correction notice PDF: " + err.message);
-        } finally {
-          setGeneratingPDF(false);
-        }
-      };
-
-      // Export findings JSON
-      const handleExportJSON = () => {
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `findings-${rid}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      };
-
       const isReady = result.readiness_score >= 70;
 
       return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
-          <div className="flex-1 flex flex-col">
-            <AppHeader
-              left={
-                <button onClick={onBack} className="inline-flex items-center gap-2 text-teal-700 hover:text-teal-900 font-bold transition">
-                  <Icons.ArrowLeft size={16} /> New Submission
-                </button>
-              }
-              right={
-                <>
-                  <span className="text-gray-600 hidden sm:inline">Carlos Rivera, P.E.</span>
-                  <button onClick={onHistory} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
-                    <Icons.FileText size={15} /> History
-                  </button>
-                  <button onClick={onLogout} className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 hover:underline">
-                    <Icons.LogOut size={15} /> Logout
-                  </button>
-                </>
-              }
-            />
-
-            <main className="mx-auto max-w-7xl w-full px-4 py-6 flex-1 flex flex-col gap-6">
+        <div className="flex-1 flex flex-col">
+          <main className="mx-auto max-w-7xl w-full px-4 py-6 flex-1 flex flex-col gap-6">
               {/* Metadata Card */}
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <dl className="grid grid-cols-2 md:grid-cols-4 gap-6 flex-1">
                     <div>
-                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Project Name</dt>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].projectName}</dt>
                       <dd className="text-sm font-bold text-gray-900 mt-1 leading-snug">{project.name}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Permit Type / Municipio</dt>
-                      <dd className="text-sm font-medium text-gray-700 mt-1">{project.permit_type} \u00b7 {project.municipality}</dd>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">{lang === "en" ? "Permit Type & Municipality" : "Tipo de Permiso y Municipio"}</dt>
+                      <dd className="text-sm font-medium text-gray-700 mt-1">
+                        {project.permit_type === "Construction" ? (lang === "en" ? "Construction" : "Construcción") : (lang === "en" ? "Use" : "Uso")} &middot; {project.municipality}
+                      </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Applied Code Set</dt>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].appliedCodeSet}</dt>
                       <dd className="text-sm font-semibold text-gray-700 mt-1">{result.code_set_name}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Compliance Status</dt>
+                      <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].complianceStatus}</dt>
                       <dd className="mt-1">
                         <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-xs font-bold ${isReady ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
                           {isReady ? <Icons.CheckCircle2 size={12} /> : <Icons.AlertTriangle size={12} />}
-                          {result.status}
+                          {lang === "en" ? result.status : (isReady ? "LISTO PARA REVISIÓN" : "NO LISTO PARA REVISIÓN")}
                         </span>
                       </dd>
                     </div>
@@ -905,7 +845,7 @@
 
                   {/* Readiness circular gauge */}
                   <div className="lg:w-60 bg-gray-50 rounded-xl border border-gray-200 p-4 shrink-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Readiness Score</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].readinessScore}</span>
                     <p className={`mt-1.5 text-4xl font-extrabold ${isReady ? 'text-emerald-700' : 'text-red-700'}`}>
                       {result.readiness_score}
                       <span className="text-lg text-gray-400 font-semibold"> / 100</span>
@@ -921,13 +861,14 @@
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {Object.entries(result.counts).map(([sev, count]) => {
                   const s = SEV_STYLE[sev];
+                  const sevLabel = sev === "High" ? (lang === "en" ? "High" : "Alto") : sev === "Medium" ? (lang === "en" ? "Medium" : "Medio") : (lang === "en" ? "Low" : "Bajo");
                   return (
                     <div key={sev} className="rounded-xl border border-gray-200 bg-white p-5 flex items-center gap-4 shadow-sm">
                       <div className={`p-3 rounded-lg ${s.bg} ${s.text}`}>
                         <s.icon size={22} />
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{sev} Severity</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{sevLabel}</span>
                         <p className="text-2xl font-bold text-gray-900 mt-0.5">{count}</p>
                       </div>
                     </div>
@@ -940,8 +881,10 @@
                 {/* Findings list */}
                 <div className="rounded-xl border border-gray-200 bg-white shadow-md flex flex-col min-h-[480px]">
                   <div className="border-b border-gray-200 px-5 py-4">
-                    <h3 className="text-sm font-bold text-gray-900">Correction Findings</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">Discrepancies matching selected rules ({findings.length} findings)</p>
+                    <h3 className="text-sm font-bold text-gray-900">{TRANSLATIONS[lang].correctionFindings}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {TRANSLATIONS[lang].discrepanciesCount} ({findings.length} {findings.length === 1 ? (lang === "en" ? "finding" : "hallazgo") : (lang === "en" ? "findings" : "hallazgos")})
+                    </p>
                   </div>
                   <ul className="divide-y divide-gray-100 flex-1 overflow-auto max-h-[500px]">
                     {findings.map((f) => (
@@ -955,12 +898,12 @@
                             <span className="flex items-center gap-2">
                               <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold ${SEV_STYLE[f.severity].chip}`}>
                                 <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[f.severity].dot}`} />
-                                {f.severity}
+                                {f.severity === "High" ? (lang === "en" ? "High" : "Alto") : f.severity === "Medium" ? (lang === "en" ? "Medium" : "Medio") : (lang === "en" ? "Low" : "Bajo")}
                               </span>
                               <span className="text-xs font-bold text-gray-900 truncate">{f.title}</span>
                             </span>
                             <span className="mt-1 block text-[11px] text-gray-400 font-semibold leading-none">
-                              Sheet: {f.sheet || "N/A"} \u00b7 Code: {f.code}
+                              {lang === "en" ? "Sheet" : "Plano"}: {f.sheet || "N/A"} &middot; {lang === "en" ? "Code" : "Código"}: {f.code}
                             </span>
                           </span>
                         </button>
@@ -974,41 +917,41 @@
                   <div className="rounded-xl border border-gray-200 bg-white shadow-md flex flex-col justify-between">
                     <div>
                       <div className="border-b border-gray-200 px-5 py-4 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-gray-900">Finding Details</h3>
+                        <h3 className="text-sm font-bold text-gray-900">{TRANSLATIONS[lang].findingDetails}</h3>
                         <span className="font-mono text-xs font-bold text-teal-700">{sel.id}</span>
                       </div>
                       <div className="p-5 space-y-4">
                         <div className="flex items-center gap-2.5">
                           <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-bold ${SEV_STYLE[sel.severity].chip}`}>
                             <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[sel.severity].dot}`} />
-                            {sel.severity}
+                            {sel.severity === "High" ? (lang === "en" ? "High" : "Alto") : sel.severity === "Medium" ? (lang === "en" ? "Medium" : "Medio") : (lang === "en" ? "Low" : "Bajo")}
                           </span>
                           <h4 className="text-base font-bold text-gray-900">{sel.title}</h4>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sheet / Plano</dt>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].sheet}</dt>
                             <dd className="text-xs font-semibold text-gray-700 mt-1">{sel.sheet || "N/A"}</dd>
                           </div>
                           <div>
-                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Code Section</dt>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].codeSection}</dt>
                             <dd className="text-xs font-mono font-bold text-teal-700 mt-1">{sel.code}</dd>
                           </div>
                         </div>
                         <div className="border-t border-gray-100 pt-3">
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Evidence / Evidencia hallada</dt>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].evidenceLabel}</dt>
                           <dd className="text-xs text-gray-700 mt-1 leading-relaxed bg-gray-50 border border-gray-100 p-2.5 rounded-lg">{sel.evidence}</dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Requirement Explanation</dt>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].explanationLabel}</dt>
                           <dd className="text-xs text-gray-600 mt-1 leading-relaxed">{sel.explanation}</dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Correction / Acción correctiva</dt>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].correctionLabel}</dt>
                           <dd className="text-xs text-emerald-800 font-medium mt-1 leading-relaxed bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-lg">{sel.correction}</dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Model Confidence</dt>
+                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{TRANSLATIONS[lang].confidenceLabel}</dt>
                           <div className="flex items-center gap-3.5 mt-1">
                             <div className="h-1.5 w-full max-w-sm rounded-full bg-gray-100 overflow-hidden border border-gray-200/50">
                               <div className="h-full bg-emerald-600" style={{ width: `${Math.round(sel.confidence * 100)}%` }} />
@@ -1018,35 +961,18 @@
                         </div>
                       </div>
                     </div>
-
-                    <div className="border-t border-gray-200 p-5 flex flex-wrap gap-2 bg-gray-50 rounded-b-xl">
-                      <button onClick={onOpenViewer} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 font-bold px-4 py-2.5 text-xs text-white transition shadow-sm">
-                        <Icons.FileText size={14} /> Open Interactive Viewer
-                      </button>
-                      <button onClick={handleDownloadNotice} disabled={generatingPDF} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm disabled:opacity-50">
-                        {generatingPDF ? <Icons.Loader2 size={14} /> : <Icons.Download size={14} />}
-                        {generatingPDF ? "Generating PDF..." : "Download Correction Notice PDF"}
-                      </button>
-                      <a href={pdfUrl} download className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                        <Icons.Download size={14} /> Annotated PDF
-                      </a>
-                      <button onClick={handleExportJSON} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-2.5 text-xs text-gray-700 transition shadow-sm">
-                        <Icons.FileJson size={14} /> JSON
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
             </main>
           </div>
-        </div>
       );
     }
 
     // Interactive Viewer Screen
-    function ViewerScreen({ data, onBack }) {
+    function ViewerScreen({ data, onBack, lang, setLang }) {
       const rid = data.review_id;
-      const findings = data.findings;
+      const findings = (data.findings || []).map(f => translateFinding(f, lang));
       const manifest = data.manifest;
       const filesBase = data.files_base;
 
@@ -1070,9 +996,9 @@
       const ZOOM_PRESETS = [25, 50, 75, 100, 125, 150, 175, 200, 300, 400];
 
       const currentPageManifest = manifest.pages.find(p => p.page === pageNo) || manifest.pages[0];
-      const pageMarkers = currentPageManifest.markers || [];
+      const pageMarkers = (currentPageManifest.markers || []).map(m => translateFinding(m, lang));
       const pageImage = `${filesBase}/${currentPageManifest.image}`;
-      
+
       const sel = findings.find(f => f.id === activeId) || findings[0];
 
       const getPresetIndex = (z) => {
@@ -1110,30 +1036,37 @@
         };
       }, []);
 
-      // Prevent window scroll on wheel zoom
+      // Smooth zoom on Ctrl/Cmd+wheel or pinch — NO auto-zoom on plain scroll
       useEffect(() => {
         const viewport = viewportRef.current;
         if (!viewport) return;
-        
+        let accumDelta = 0;
+        let debounceTimer = null;
+
         const handleWheel = (e) => {
+          // Only zoom when Ctrl/Cmd is held (pinch gesture or Ctrl+scroll)
+          if (!e.ctrlKey && !e.metaKey) return;
           e.preventDefault();
-          const idx = getPresetIndex(zoom);
-          if (e.deltaY < 0) {
-            if (idx < ZOOM_PRESETS.length - 1) {
-              setZoom(ZOOM_PRESETS[idx + 1]);
-            }
-          } else {
-            if (idx > 0) {
-              setZoom(ZOOM_PRESETS[idx - 1]);
-            }
+
+          // Accumulate delta for smooth trackpad gestures
+          accumDelta += e.deltaY;
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => { accumDelta = 0; }, 150);
+
+          // Apply zoom in ±5% steps with a threshold to avoid micro-jumps
+          if (Math.abs(accumDelta) > 15) {
+            const step = accumDelta < 0 ? 5 : -5;
+            setZoom(prev => Math.max(10, Math.min(400, prev + step)));
+            accumDelta = 0;
           }
         };
-        
+
         viewport.addEventListener("wheel", handleWheel, { passive: false });
         return () => {
+          clearTimeout(debounceTimer);
           viewport.removeEventListener("wheel", handleWheel);
         };
-      }, [zoom]);
+      }, []);
 
       // Center viewport on a finding marker.
       // pageManifest defaults to currentPageManifest (same-page clicks),
@@ -1152,7 +1085,7 @@
           const pm = pageManifest ||
             manifest.pages.find(p => p.page === f.page) ||
             manifest.pages[0];
-          const pageW = pm.width  || 792;
+          const pageW = pm.width || 792;
           const pageH = pm.height || 612;
 
           // The panning div geometry:
@@ -1201,7 +1134,7 @@
         // To fit PAGE HEIGHT in the viewport we need a zoom < 100 for portrait pages.
         if (!viewportRef.current) return;
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width  || 792;
+        const pageW = currentPageManifest.width || 792;
         const pageH = currentPageManifest.height || 612;
         // imgW = vRect.width * (zoom/100), imgH = imgW * pageH/pageW
         // We want imgH = vRect.height → zoom = vRect.height / (vRect.width * pageH/pageW) * 100
@@ -1255,23 +1188,23 @@
       const getMinimapViewport = () => {
         if (!viewportRef.current) return { left: 0, top: 0, width: 100, height: 100 };
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width  || 792;
+        const pageW = currentPageManifest.width || 792;
         const pageH = currentPageManifest.height || 612;
 
         // Panning div true pixel dimensions
         const imgW = vRect.width * (zoom / 100);
         const imgH = imgW * (pageH / pageW);
 
-        const wFrac   = vRect.width  / imgW;
-        const hFrac   = vRect.height / imgH;
+        const wFrac = vRect.width / imgW;
+        const hFrac = vRect.height / imgH;
         const leftFrac = -panX / imgW;
-        const topFrac  = -panY / imgH;
+        const topFrac = -panY / imgH;
 
         return {
-          left:   Math.max(0, Math.min(100, leftFrac * 100)),
-          top:    Math.max(0, Math.min(100, topFrac  * 100)),
-          width:  Math.max(5, Math.min(100, wFrac    * 100)),
-          height: Math.max(5, Math.min(100, hFrac    * 100)),
+          left: Math.max(0, Math.min(100, leftFrac * 100)),
+          top: Math.max(0, Math.min(100, topFrac * 100)),
+          width: Math.max(5, Math.min(100, wFrac * 100)),
+          height: Math.max(5, Math.min(100, hFrac * 100)),
         };
       };
 
@@ -1284,13 +1217,13 @@
 
         if (!viewportRef.current) return;
         const vRect = viewportRef.current.getBoundingClientRect();
-        const pageW = currentPageManifest.width  || 792;
+        const pageW = currentPageManifest.width || 792;
         const pageH = currentPageManifest.height || 612;
 
         const imgW = vRect.width * (zoom / 100);
         const imgH = imgW * (pageH / pageW);
 
-        setPanX(vRect.width  / 2 - clickX * imgW);
+        setPanX(vRect.width / 2 - clickX * imgW);
         setPanY(vRect.height / 2 - clickY * imgH);
       };
 
@@ -1356,21 +1289,8 @@
       };
 
       return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-between">
-          <div className="flex flex-col flex-1">
-            <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm flex items-center justify-between px-4 py-3 select-none">
-              <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-900 transition">
-                <Icons.ArrowLeft size={16} /> Back to Dashboard
-              </button>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{data.project.name} &middot; {findings.length} Findings</span>
-                <a href={`${filesBase}/annotated.pdf`} download className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 px-4 py-2 text-xs font-bold text-white transition shadow-sm">
-                  <Icons.Download size={14} /> Download PDF
-                </a>
-              </div>
-            </header>
-
-            <main className="flex-1 flex items-stretch gap-4 p-4 relative">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <main className="flex-1 flex items-stretch gap-4 p-4 relative overflow-hidden">
               {/* ── LEFT SIDEBAR: collapsible drawings rail ── */}
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 {/* The panel content */}
@@ -1381,7 +1301,7 @@
                   flexShrink: 0,
                 }}>
                   <div style={{ width: 140 }} className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col gap-3 self-start max-h-[calc(100vh-140px)] overflow-y-auto shadow-md select-none">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-1.5">Drawings</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-1.5">{TRANSLATIONS[lang].drawingsLabel}</p>
                     <ul className="space-y-2.5">
                       {manifest.pages.map((p) => {
                         const thumbUrl = `${filesBase}/${p.thumb}`;
@@ -1443,36 +1363,36 @@
                     <button onClick={() => selectPage(Math.min(manifest.page_count, pageNo + 1))} className="text-gray-500 hover:text-teal-700 transition"><Icons.ChevronRight size={16} /></button>
                   </div>
                   <span className="text-xs font-semibold text-gray-500 font-mono leading-none">
-                    {pageMarkers.length} marker{pageMarkers.length !== 1 ? 's' : ''} on sheet
+                    {pageMarkers.length} {pageMarkers.length === 1 ? TRANSLATIONS[lang].markersOnSheet : TRANSLATIONS[lang].markersOnSheetPlural}
                   </span>
                 </div>
-                
+
                 {/* Zoom Toolbar */}
                 <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-2 border-b border-gray-200 select-none text-xs font-semibold">
                   <div className="flex items-center gap-1 border-r pr-3 mr-1">
-                    <button 
+                    <button
                       onClick={handleZoomOut}
                       className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded border border-gray-300 text-gray-700 transition"
-                      title="Zoom Out"
+                      title={TRANSLATIONS[lang].zoomOut}
                     >
-                      Zoom Out (-)
+                      {TRANSLATIONS[lang].zoomOut}
                     </button>
                     <span className="w-12 text-center font-mono font-bold text-gray-700">
                       {zoom}%
                     </span>
-                    <button 
+                    <button
                       onClick={handleZoomIn}
                       className="px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded border border-gray-300 text-gray-700 transition"
-                      title="Zoom In"
+                      title={TRANSLATIONS[lang].zoomIn}
                     >
-                      Zoom In (+)
+                      {TRANSLATIONS[lang].zoomIn}
                     </button>
                   </div>
-                  
+
                   {/* Zoom Slider */}
                   <div className="flex items-center gap-2 border-r pr-4 mr-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Slider</span>
-                    <input 
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{TRANSLATIONS[lang].sliderLabel}</span>
+                    <input
                       type="range"
                       min="0"
                       max={ZOOM_PRESETS.length - 1}
@@ -1481,43 +1401,43 @@
                       className="w-32 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-700"
                     />
                   </div>
-                  
+
                   {/* Preset Actions */}
                   <div className="flex items-center gap-1.5">
-                    <button 
+                    <button
                       onClick={handleFitWidth}
                       className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
                     >
-                      Fit Width
+                      {TRANSLATIONS[lang].fitWidth}
                     </button>
-                    <button 
+                    <button
                       onClick={handleFitPage}
                       className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
                     >
-                      Fit Page
+                      {TRANSLATIONS[lang].fitPage}
                     </button>
-                    <button 
+                    <button
                       onClick={handleActualSize}
                       className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
                     >
-                      1:1 Actual Size
+                      {TRANSLATIONS[lang].actualSize}
                     </button>
-                    <button 
+                    <button
                       onClick={handleResetView}
                       className="px-2.5 py-1 hover:bg-gray-50 border border-gray-300 rounded text-gray-700 transition"
                     >
-                      Reset View
+                      {TRANSLATIONS[lang].resetView}
                     </button>
                   </div>
-                  
+
                   <div className="ml-auto text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <span>Pan: Drag Mouse / Spacebar</span>
+                    <span>{TRANSLATIONS[lang].panLabel}</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
                   </div>
                 </div>
-                
+
                 {/* Drawing Viewport Box */}
-                <div 
+                <div
                   ref={viewportRef}
                   className={`relative flex-1 overflow-hidden select-none outline-none ${spacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
                   onMouseDown={handleMouseDown}
@@ -1527,7 +1447,7 @@
                 >
                   {/* Panning wrapper — aspect ratio matches the ACTUAL page dimensions
                       so pins positioned at cx*100%, cy*100% map 1:1 to image content */}
-                  <div 
+                  <div
                     className="relative origin-top-left bg-white shadow-lg border border-gray-300 rounded"
                     style={{
                       transform: `translate(${panX}px, ${panY}px)`,
@@ -1713,30 +1633,30 @@
                       );
                     })}
                   </div>
-                  
+
                   {/* Minimap Overlay inside viewport container */}
-                  <div 
+                  <div
                     className="absolute top-4 right-4 z-20 w-36 aspect-[11/8.5] bg-white border border-gray-300 rounded shadow-md overflow-hidden cursor-pointer select-none"
                     onClick={handleMinimapClick}
                   >
                     <img src={pageImage} className="w-full h-full object-contain opacity-60 pointer-events-none" />
-                    
+
                     {/* Markers on Minimap */}
                     {pageMarkers.map((m) => {
                       const [x0, y0, x1, y1] = m.bbox;
                       const cx = (x0 + x1) / 2;
                       const cy = (y0 + y1) / 2;
                       return (
-                        <div 
+                        <div
                           key={m.id}
                           className="absolute w-1.5 h-1.5 rounded-full bg-red-600 border border-white -translate-x-1/2 -translate-y-1/2"
                           style={{ left: `${cx * 100}%`, top: `${cy * 100}%` }}
                         />
                       );
                     })}
-                    
+
                     {/* Viewport Indicator on Minimap */}
-                    <div 
+                    <div
                       className="absolute border border-teal-600 bg-teal-600/10 pointer-events-none"
                       style={{
                         left: `${minimapViewport.left}%`,
@@ -1780,70 +1700,70 @@
                   transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
                   flexShrink: 0,
                 }}>
-                <div style={{ width: 320 }} className="flex flex-col gap-4 self-stretch max-h-[calc(100vh-140px)] overflow-y-auto">
-                {/* Active Annotation Detail Card */}
-                {sel && (
-                  <div className="rounded-xl border border-gray-200 bg-white shadow-md">
-                    <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between select-none">
-                      <span className="text-xs font-bold text-gray-900">Annotation Details</span>
-                      <span className="font-mono text-xs font-bold text-teal-700">{sel.id}</span>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold ${SEV_STYLE[sel.severity].chip}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[sel.severity].dot}`} />
-                          {sel.severity}
-                        </span>
-                        <h4 className="text-xs font-bold text-gray-900 leading-snug">{sel.title}</h4>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold border-b border-gray-100 pb-2">
-                        <div>
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Sheet / Page</dt>
-                          <dd className="text-gray-700 mt-0.5">p{sel.page} • {sel.sheet || 'N/A'}</dd>
+                  <div style={{ width: 320 }} className="flex flex-col gap-4 self-stretch max-h-[calc(100vh-140px)] overflow-y-auto">
+                    {/* Active Annotation Detail Card */}
+                    {sel && (
+                      <div className="rounded-xl border border-gray-200 bg-white shadow-md">
+                        <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between select-none">
+                          <span className="text-xs font-bold text-gray-900">{TRANSLATIONS[lang].activeAnnotationDetails}</span>
+                          <span className="font-mono text-xs font-bold text-teal-700">{sel.id}</span>
                         </div>
-                        <div>
-                          <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Rule Code</dt>
-                          <dd className="text-teal-700 font-mono mt-0.5">{sel.code}</dd>
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold ${SEV_STYLE[sel.severity].chip}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${SEV_STYLE[sel.severity].dot}`} />
+                              {sel.severity === "High" ? (lang === "en" ? "High" : "Alto") : sel.severity === "Medium" ? (lang === "en" ? "Medium" : "Medio") : (lang === "en" ? "Low" : "Bajo")}
+                            </span>
+                            <h4 className="text-xs font-bold text-gray-900 leading-snug">{sel.title}</h4>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold border-b border-gray-100 pb-2">
+                            <div>
+                              <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{TRANSLATIONS[lang].sheetPage}</dt>
+                              <dd className="text-gray-700 mt-0.5">p{sel.page} • {sel.sheet || 'N/A'}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{TRANSLATIONS[lang].ruleCode}</dt>
+                              <dd className="text-teal-700 font-mono mt-0.5">{sel.code}</dd>
+                            </div>
+                          </div>
+                          <div>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{TRANSLATIONS[lang].evidenceLabel}</dt>
+                            <dd className="text-xs text-gray-700 mt-1 leading-relaxed bg-gray-50 border p-2 rounded-lg">{sel.evidence}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{TRANSLATIONS[lang].correctionLabel}</dt>
+                            <dd className="text-xs text-emerald-800 font-medium mt-1 leading-relaxed bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-lg">{sel.correction}</dd>
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Evidence</dt>
-                        <dd className="text-xs text-gray-700 mt-1 leading-relaxed bg-gray-50 border p-2 rounded-lg">{sel.evidence}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Required Correction</dt>
-                        <dd className="text-xs text-emerald-800 font-medium mt-1 leading-relaxed bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-lg">{sel.correction}</dd>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* All findings shortcuts */}
-                <div className="rounded-xl border border-gray-200 bg-white shadow-md flex-1 flex flex-col min-h-[200px]">
-                  <div className="border-b border-gray-200 px-4 py-3 select-none flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900">All Findings</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-400 font-medium hidden sm:block">↑↓ keys to navigate</span>
-                      <span className="inline-flex items-center justify-center bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold w-5 h-5">{findings.length}</span>
+                    {/* All findings shortcuts */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-md flex-1 flex flex-col min-h-[200px]">
+                      <div className="border-b border-gray-200 px-4 py-3 select-none flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-900">{TRANSLATIONS[lang].allFindings}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-gray-400 font-medium hidden sm:block">{TRANSLATIONS[lang].keysToNavigate}</span>
+                          <span className="inline-flex items-center justify-center bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold w-5 h-5">{findings.length}</span>
+                        </div>
+                      </div>
+                      <ul className="divide-y divide-gray-100 overflow-y-auto flex-1 max-h-[300px]">
+                        {findings.map((f) => (
+                          <li key={f.id}>
+                            <button
+                              onClick={() => selectFinding(f)}
+                              className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50/50 transition ${activeId === f.id ? "bg-teal-50/30 font-bold border-l-4 border-teal-700" : "border-l-4 border-transparent"}`}
+                            >
+                              <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${SEV_STYLE[f.severity].dot}`} />
+                              <span className="font-mono text-xs text-gray-400 w-12 shrink-0">{f.id}</span>
+                              <span className="text-xs text-gray-700 truncate flex-1">{f.title}</span>
+                              <span className="text-[10px] text-gray-400 font-bold font-mono">p{f.page}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                  <ul className="divide-y divide-gray-100 overflow-y-auto flex-1 max-h-[300px]">
-                    {findings.map((f) => (
-                      <li key={f.id}>
-                        <button
-                          onClick={() => selectFinding(f)}
-                          className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50/50 transition ${activeId === f.id ? "bg-teal-50/30 font-bold border-l-4 border-teal-700" : "border-l-4 border-transparent"}`}
-                        >
-                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${SEV_STYLE[f.severity].dot}`} />
-                          <span className="font-mono text-xs text-gray-400 w-12 shrink-0">{f.id}</span>
-                          <span className="text-xs text-gray-700 truncate flex-1">{f.title}</span>
-                          <span className="text-[10px] text-gray-400 font-bold font-mono">p{f.page}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                </div>
                 </div>
               </div>
             </main>
@@ -1852,17 +1772,118 @@
       );
     }
 
+    // History Screen — lists previous submissions from /api/reviews
+    function HistoryScreen({ onNav, onLoadReview, lang, setLang }) {
+      const [reviews, setReviews] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        (async () => {
+          try {
+            const res = await fetch("/api/reviews");
+            if (res.ok) {
+              const data = await res.json();
+              setReviews(data);
+            }
+          } catch (err) {
+            console.error("Failed to load reviews", err);
+          } finally {
+            setLoading(false);
+          }
+        })();
+      }, []);
+
+      const handleLoad = async (rid) => {
+        try {
+          const res = await fetch(`/api/reviews/${rid}/load`);
+          if (res.ok) {
+            const data = await res.json();
+            onLoadReview(data);
+          }
+        } catch (err) {
+          alert("Failed to load review: " + err.message);
+        }
+      };
+
+      const formatDate = (ts) => {
+        try {
+          return new Date(ts * 1000).toLocaleDateString("en-US", {
+            month: "short", day: "numeric", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+          });
+        } catch { return "—"; }
+      };      return (
+        <div className="flex-1 flex flex-col">
+          <main className="mx-auto max-w-4xl w-full px-4 py-8 flex-1">
+            <h2 className="text-xl font-bold text-gray-900">{TRANSLATIONS[lang].submissionHistory}</h2>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">{TRANSLATIONS[lang].submissionHistorySub}</p>
+
+            {loading ? (
+              <div className="mt-12 flex justify-center">
+                <Icons.Loader2 size={28} className="text-teal-600" />
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="mt-12 text-center">
+                <p className="text-sm text-gray-400 font-medium">{TRANSLATIONS[lang].noSubmissions}</p>
+                <button onClick={() => onNav("upload")} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 text-sm transition shadow-sm">
+                  <Icons.Upload size={16} /> {TRANSLATIONS[lang].startNewReview}
+                </button>
+              </div>
+            ) : (
+              <ul className="mt-6 space-y-3">
+                {reviews.map((r) => {
+                  const score = r.result?.readiness_score ?? "—";
+                  const status = r.result?.status || "";
+                  const isReady = typeof score === "number" && score >= 70;
+                  return (
+                    <li key={r.id}>
+                      <button
+                        onClick={() => handleLoad(r.id)}
+                        className="w-full text-left rounded-xl border border-gray-200 bg-white p-5 hover:border-teal-300 hover:shadow-md transition flex items-center gap-5"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{r.project?.name || r.id}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {r.project?.municipality || ""} · {r.project?.permit_type === "Construction" ? (lang === "en" ? "Construction" : "Construcción") : (lang === "en" ? "Use" : "Uso")} · {formatDate(r.mtime)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-center">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{TRANSLATIONS[lang].findings}</span>
+                            <span className="text-lg font-bold text-gray-900">{r.findings_count}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{TRANSLATIONS[lang].score}</span>
+                            <span className={`text-lg font-bold ${isReady ? "text-emerald-700" : "text-red-700"}`}>{score}</span>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold ${isReady ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                            {isReady ? <Icons.CheckCircle2 size={10} /> : <Icons.AlertTriangle size={10} />}
+                            {status || (isReady ? (lang === "en" ? "READY" : "LISTO") : (lang === "en" ? "NOT READY" : "NO LISTO"))}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </main>
+        </div>
+      );
+    }
+
     // App Wrapper
     function App() {
-      const [screen, setScreen] = useState("login");
+      const [screen, setScreen] = useState("upload");
+      const [lang, setLang] = useState("en");
       const [codeSets, setCodeSets] = useState([
         { id: "prrc_2018", name: "PRRC 2018" },
         { id: "prbc_2018", name: "PRBC 2018" },
         { id: "unified_pr", name: "Unified Puerto Rico Code" }
       ]);
       const [reviewData, setReviewData] = useState(null);
+      const [generatingPDF, setGeneratingPDF] = useState(false);
 
-      // Fetch code sets from API on mount
       useEffect(() => {
         const fetchCodeSets = async () => {
           try {
@@ -1880,8 +1901,12 @@
         fetchCodeSets();
       }, []);
 
-      const handleLogin = () => {
-        setScreen("upload");
+      const handleNav = (target) => {
+        if ((target === "results" || target === "viewer") && !reviewData) {
+          alert("Please submit a plan review first, or load one from History.");
+          return;
+        }
+        setScreen(target);
       };
 
       const handleRun = (data) => {
@@ -1889,46 +1914,122 @@
         setScreen("results");
       };
 
-      const handleOpenSavedReview = (data) => {
+      const handleLoadReview = (data) => {
         setReviewData(data);
         setScreen("results");
       };
 
-      const handleOpenSavedViewer = (data) => {
-        setReviewData(data);
-        setScreen("viewer");
+      const handleDownloadNotice = async () => {
+        if (!reviewData) return;
+        const rid = reviewData.review_id;
+        setGeneratingPDF(true);
+        try {
+          const res = await fetch(`/api/reviews/${rid}/generate-report?lang=${lang}`, {
+            method: "POST"
+          });
+          if (!res.ok) {
+            throw new Error("Failed to generate PDF report from server");
+          }
+          const payload = await res.json();
+          const a = document.createElement("a");
+          a.href = payload.report_url;
+          a.download = payload.file_name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (err) {
+          alert("Error generating correction notice PDF: " + err.message);
+        } finally {
+          setGeneratingPDF(false);
+        }
+      };
+
+      const handleDownloadAnnotatedPdf = async () => {
+        if (!reviewData) return;
+        const rid = reviewData.review_id;
+        setGeneratingPDF(true); // Reuse the same loading state for simplicity or create a new one, actually let's just use it
+        try {
+          const res = await fetch(`/api/reviews/${rid}/generate-annotated-pdf?lang=${lang}`, {
+            method: "POST"
+          });
+          if (!res.ok) {
+            throw new Error("Failed to generate annotated PDF from server");
+          }
+          const payload = await res.json();
+          const a = document.createElement("a");
+          a.href = payload.report_url;
+          a.download = payload.file_name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (err) {
+          alert("Error generating annotated PDF: " + err.message);
+        } finally {
+          setGeneratingPDF(false);
+        }
+      };
+
+      const handleExportJSON = () => {
+        if (!reviewData) return;
+        const rid = reviewData.review_id;
+        const jsonStr = JSON.stringify(reviewData, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `findings-${rid}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const renderRight = () => {
+        if (screen === "results" && reviewData) {
+          const pdfUrl = `${reviewData.files_base}/annotated.pdf`;
+          return (
+            <>
+              <button onClick={handleDownloadNotice} disabled={generatingPDF} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-1.5 text-xs text-gray-700 transition shadow-sm disabled:opacity-50">
+                {generatingPDF ? <Icons.Loader2 size={13} className="animate-spin" /> : <Icons.Download size={13} />}
+                {TRANSLATIONS[lang].downloadNoticePdf}
+              </button>
+              <button onClick={handleDownloadAnnotatedPdf} disabled={generatingPDF} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-1.5 text-xs text-gray-700 transition shadow-sm disabled:opacity-50">
+                {generatingPDF ? <Icons.Loader2 size={13} className="animate-spin" /> : <Icons.Download size={13} />}
+                {TRANSLATIONS[lang].downloadAnnotatedPdf}
+              </button>
+              <button onClick={handleExportJSON} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-bold px-3 py-1.5 text-xs text-gray-700 transition shadow-sm">
+                <Icons.FileJson size={13} /> {TRANSLATIONS[lang].json || "JSON"}
+              </button>
+              <button onClick={() => setScreen("viewer")} className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 font-bold px-3.5 py-1.5 text-xs text-white transition shadow-sm">
+                <Icons.FileText size={13} /> {TRANSLATIONS[lang].openViewer}
+              </button>
+            </>
+          );
+        } else if (screen === "viewer" && reviewData) {
+          const pdfUrl = `${reviewData.files_base}/annotated.pdf`;
+          const findingsCount = reviewData.findings.length;
+          return (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                {reviewData.project.name} &middot; {findingsCount} {findingsCount === 1 ? (lang === "en" ? "Finding" : "Hallazgo") : (lang === "en" ? "Findings" : "Hallazgos")}
+              </span>
+              <button onClick={handleDownloadAnnotatedPdf} disabled={generatingPDF} className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 px-4 py-2 text-xs font-bold text-white transition shadow-sm disabled:opacity-50">
+                {generatingPDF ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Download size={14} />}
+                {TRANSLATIONS[lang].downloadPdf}
+              </button>
+            </div>
+          );
+        }
+        return null;
       };
 
       return (
-        <div>
-          {/* Developer screen override sidebar for rapid previewing */}
-          <div className="fixed bottom-3 right-3 z-50 flex gap-1 rounded-lg border border-gray-300 bg-white/95 p-1 text-[11px] shadow-md select-none">
-            {["login", "upload", "history", "results", "viewer"].map((s) => (
-              <button
-                key={s}
-                onClick={() => {
-                  if (s === "results" && !reviewData) {
-                    alert("Please submit plan review from upload screen first!");
-                    return;
-                  }
-                  if (s === "viewer" && !reviewData) {
-                    alert("Please submit plan review from upload screen first!");
-                    return;
-                  }
-                  setScreen(s);
-                }}
-                className={`rounded px-2.5 py-1 font-bold capitalize transition ${screen === s ? "bg-teal-700 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                {s}
-              </button>
-            ))}
+        <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+          <AppHeader activeTab={screen} onNav={handleNav} right={renderRight()} lang={lang} setLang={setLang} />
+          <div className={`flex-1 flex flex-col ${screen === "viewer" ? "overflow-hidden" : "overflow-y-auto"}`}>
+            {screen === "upload" && <UploadScreen onRun={handleRun} onNav={handleNav} codeSets={codeSets} lang={lang} setLang={setLang} />}
+            {screen === "results" && <ResultsScreen data={reviewData} onOpenViewer={() => setScreen("viewer")} onNav={handleNav} lang={lang} setLang={setLang} />}
+            {screen === "viewer" && <ViewerScreen data={reviewData} onBack={() => setScreen("results")} lang={lang} setLang={setLang} />}
+            {screen === "history" && <HistoryScreen onNav={handleNav} onLoadReview={handleLoadReview} lang={lang} setLang={setLang} />}
           </div>
-
-          {screen === "login" && <LoginScreen onLogin={handleLogin} />}
-          {screen === "upload" && <UploadScreen onRun={handleRun} onLogout={() => setScreen("login")} onHistory={() => setScreen("history")} codeSets={codeSets} />}
-          {screen === "history" && <HistoryScreen onOpenReview={handleOpenSavedReview} onOpenViewer={handleOpenSavedViewer} onNewSubmission={() => setScreen("upload")} onLogout={() => setScreen("login")} />}
-          {screen === "results" && <ResultsScreen data={reviewData} onOpenViewer={() => setScreen("viewer")} onLogout={() => setScreen("login")} onBack={() => setScreen("upload")} onHistory={() => setScreen("history")} />}
-          {screen === "viewer" && <ViewerScreen data={reviewData} onBack={() => setScreen("results")} />}
         </div>
       );
     }
@@ -1938,4 +2039,5 @@
     root.render(<App />);
   </script>
 </body>
+
 </html>

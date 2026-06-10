@@ -153,7 +153,7 @@ function UploadScreen({ onRun, onLogout }) {
             <button onClick={() => setStep(0)} disabled={running} className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">
               {running ? <Loader2 size={16} className="animate-spin"/> : <ClipboardList size={16}/>}Run AI Review</button>
             <button disabled={running} className="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Clear Form</button>
-            <span className="text-xs text-gray-400">Engine: Opus 4.8 (low) \u00b7 checking against <b className="text-gray-600">{CODE_SETS.find(c=>c.id===codeSet).name}</b></span>
+            <span className="text-xs text-gray-400">Engine: Grok 4.20 (low) \u00b7 checking against <b className="text-gray-600">{CODE_SETS.find(c=>c.id===codeSet).name}</b></span>
           </div>
 
           {running && (

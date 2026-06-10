@@ -65,7 +65,8 @@ def _rect_from_bbox(page: fitz.Page, f: dict) -> fitz.Rect:
 
 
 def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
-                 thumb_zoom: float = 0.32, page_zoom: float = 1.4) -> dict:
+                 thumb_zoom: float = 0.32, page_zoom: float = 1.4,
+                 render_images: bool = True, filename: str = "annotated.pdf") -> dict:
     os.makedirs(out_dir, exist_ok=True)
     doc = fitz.open(src_pdf)
     n_pages = doc.page_count
@@ -87,9 +88,12 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
 
         # ─── Step 1: Render CLEAN full-res PNG BEFORE adding any annotations ───
         # This is what the HTML viewer displays — crisp, uncluttered drawings.
-        full = page.get_pixmap(matrix=fitz.Matrix(page_zoom, page_zoom))
-        full_name = f"page-{pno+1:02d}.png"
-        full.save(os.path.join(out_dir, full_name))
+        if render_images:
+            full = page.get_pixmap(matrix=fitz.Matrix(page_zoom, page_zoom))
+            full_name = f"page-{pno+1:02d}.png"
+            full.save(os.path.join(out_dir, full_name))
+        else:
+            full_name = f"page-{pno+1:02d}.png"
 
         # ─── Step 2: Add PDF annotations (for download PDF + thumbnail preview) ─
         for f in page_findings:
@@ -148,9 +152,12 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
             })
 
         # ─── Step 3: Render annotated THUMBNAIL (marks baked in for sidebar) ────
-        thumb = page.get_pixmap(matrix=fitz.Matrix(thumb_zoom, thumb_zoom))
-        thumb_name = f"page-{pno+1:02d}.thumb.png"
-        thumb.save(os.path.join(out_dir, thumb_name))
+        if render_images:
+            thumb = page.get_pixmap(matrix=fitz.Matrix(thumb_zoom, thumb_zoom))
+            thumb_name = f"page-{pno+1:02d}.thumb.png"
+            thumb.save(os.path.join(out_dir, thumb_name))
+        else:
+            thumb_name = f"page-{pno+1:02d}.thumb.png"
 
         manifest_pages.append({
             "page": pno + 1,
@@ -164,13 +171,17 @@ def annotate_pdf(src_pdf: str, findings: list[dict[str, Any]], out_dir: str,
         })
 
     # Save the fully annotated PDF for download
-    annotated_path = os.path.join(out_dir, "annotated.pdf")
+    annotated_path = os.path.join(out_dir, filename)
+    try:
+        doc.bake(annots=True)
+    except Exception as e:
+        print(f"Error baking/flattening annotations: {e}")
     doc.save(annotated_path, deflate=True)
     doc.close()
 
     manifest = {
         "source": os.path.basename(src_pdf),
-        "annotated_pdf": "annotated.pdf",
+        "annotated_pdf": filename,
         "page_count": n_pages,
         "pages": manifest_pages,
     }

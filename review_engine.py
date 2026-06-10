@@ -1,12 +1,12 @@
 """
 review_engine.py — generate plan-review findings for a PDF against a pre-loaded
-Puerto Rico code set, using Claude (Anthropic Messages API).
+Puerto Rico code set, using an LLM via OpenRouter.
 
-Set ANTHROPIC_API_KEY to run live. With --mock (or no key) it returns the
+Set OPENROUTER_API_KEY to run live. With --mock (or no key) it returns the
 bundled sample findings so the whole pipeline stays testable offline.
 
-Per request, the default model is Opus 4.8 at low reasoning effort.
-Verify the exact model string against current Anthropic docs before production.
+Default model is x-ai/grok-4.20.
+Verify the exact model string against OpenRouter docs before production.
 """
 from __future__ import annotations
 import json, os, re, glob
@@ -27,7 +27,7 @@ try:
 except Exception:
     pass
 
-DEFAULT_MODEL = os.environ.get("OGPE_MODEL", "anthropic/claude-opus-4.8")
+DEFAULT_MODEL = os.environ.get("OGPE_MODEL", "x-ai/grok-4.20")
 # "low" reasoning effort, per request. The engine passes this through; adjust to
 # the current API parameter name/values per Anthropic docs.
 DEFAULT_EFFORT = os.environ.get("OGPE_EFFORT", "low")
@@ -76,6 +76,8 @@ def build_prompt(code_set: dict, pages: list[dict], language: str) -> str:
     return f"""You are an OGPe plan-review assistant performing a conservative FIRST-PASS
 screening of a permit drawing set against the "{code_set['name']}" rule set.
 
+CRITICAL REQUIREMENT: This screening must be 100% deterministic, consistent, and repeatable. The same drawing text inputs must always yield the exact same findings, scores, severity classifications, and bounding boxes. Perform your analysis objectively and deterministically, with zero creativity or variation.
+
 Rules to screen against:
 {rules}
 
@@ -92,7 +94,7 @@ Return ONLY a JSON array (no prose, no markdown) where each item has:
   bbox         normalized [x0,y0,x1,y1] (0..1) locating the evidence on that page
   sheet        sheet id if visible (e.g. "A-101"), else ""
   code         the rule's section reference
-  evidence     <= 25 words, paraphrased from the drawing text (do not quote at length)
+  evidence     evidence directly from the drawing text (do not quote at length)
   explanation  one sentence on the requirement
   correction   one sentence on the required correction
   confidence   0..1
@@ -112,6 +114,7 @@ def _call_openrouter(prompt: str, model: str, effort: str) -> str:
     body = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.0,
     }
     # Some OpenRouter models support reasoning effort or pass-through configurations
     req = urllib.request.Request(
@@ -136,6 +139,7 @@ def _call_anthropic(prompt: str, model: str, effort: str) -> str:
         "model": model,
         "max_tokens": 4000,
         "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.0,
     }
     # pass reasoning effort if supported by the account/model; harmless extra key
     # is ignored by older endpoints behind a try/except on the caller side.
