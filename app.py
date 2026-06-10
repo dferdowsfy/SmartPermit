@@ -31,7 +31,12 @@ import review_engine
 from annotate import annotate_pdf
 
 HERE = os.path.dirname(__file__)
-REVIEWS = os.path.join(HERE, "reviews")
+
+if os.environ.get("VERCEL"):
+    REVIEWS = "/tmp/reviews"
+else:
+    REVIEWS = os.path.join(HERE, "reviews")
+
 SAMPLE = os.path.join(HERE, "sample", "modelo-d.pdf")
 STATIC = os.path.join(HERE, "static")
 os.makedirs(REVIEWS, exist_ok=True)
