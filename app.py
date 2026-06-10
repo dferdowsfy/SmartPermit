@@ -78,6 +78,11 @@ def home():
     return FileResponse(os.path.join(STATIC, "index.html"))
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/api/code-sets")
 def code_sets():
     return review_engine.list_code_sets()
